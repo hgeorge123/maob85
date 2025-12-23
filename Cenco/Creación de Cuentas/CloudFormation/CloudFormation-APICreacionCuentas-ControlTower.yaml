@@ -1,0 +1,209 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Redirige los eventos  CreateManagedAccount  de Service Catalog  a un EventBus de la cuenta del ApiGateway desplegado.
+
+Parameters:
+  CuentaOrigen:
+    Type: "String"
+    Description: "Cuenta Origen (Permisos STS)"
+    Default: "471112860914"
+  
+  RolOrigen:    
+    Type: "String"
+    Description: "Rol Origen (Permisos STS)"
+    Default: "cct-plataforma-gestion-creacion-cuentas-rol"
+
+  OU:    
+    Type: "String"
+    Description: "Organizational Unit (Permisos STS)"
+    Default: "ou-2a12-msk3sqe0"
+
+  SCPortafolioID:    
+    Type: "String"
+    Description: "Portafolio ID de Service Catalog"
+    Default: "port-qwt5a2ibdl3mw"
+
+  SCProductID:    
+    Type: "String"
+    Description: "Product ID de Service Catalog"
+    Default: "prod-p3oluqr6ehtce"
+
+  TargetEventBus:
+    Type: String
+    Description: ARN del EventBus para APIGateway.
+    Default: "cct-plataforma-eb-creacion-cuentas"
+    
+Resources:
+  CrossAccountEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: cct-plataforma-cross-account-event-rule
+      Description: Redirects CreateManagedAccount events to Global EventBus Global on central account.
+      EventPattern:
+        source:
+          - "aws.controltower"
+        detail-type:
+          - "AWS Service Event via CloudTrail"
+        detail:
+          serviceEventDetails:
+            createManagedAccountStatus:
+              state:
+                - "SUCCEEDED"
+          eventName:
+            - "CreateManagedAccount"
+      State: ENABLED
+      Targets:
+        - Arn: !Sub "arn:aws:events:${AWS::Region}:${CuentaOrigen}:event-bus/${TargetEventBus}"
+          Id: CrossAccountToCentralEventBus
+          RoleArn: !GetAtt EventBridgeCrossAccountRole.Arn
+
+  EventBridgeCrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cct-plataforma-cross-account-event-bridge-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - events.amazonaws.com
+
+  ControlAMICrossAccountIAMPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: cct-plataforma-cross-account-iam-policy
+      Roles:
+        - !Ref EventBridgeCrossAccountRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: events:PutEvents
+            Resource: !Sub "arn:aws:events:${AWS::Region}:${CuentaOrigen}:event-bus/${TargetEventBus}"
+
+  LambdaExecutionRole:
+    UpdateReplacePolicy: "Retain"
+    Type: AWS::IAM::Role
+    DeletionPolicy: "Delete"      
+    Properties:
+      Path: "/"    
+      RoleName: cct-plataforma-sts-creacion-cuentas
+      MaxSessionDuration: 3600
+      Description: ""
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${CuentaOrigen}:role/${RolOrigen}"
+            Action: "sts:AssumeRole"
+          - Effect: Allow
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+
+  LambdaExecutionRoleManagedPolicy:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::ManagedPolicy"
+    DeletionPolicy: "Delete"
+    Properties:
+      ManagedPolicyName: "cct-plataforma-sts-creacion-cuentas-policy"
+      Path: "/"
+      Description: ""
+      Groups: []
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        
+        - Sid: "VisualEditor0"
+          Effect: "Allow"
+          Action:
+                - cloudformation:GetTemplateSummary
+                - controltower:CreateManagedAccount
+                - controltower:DeregisterManagedAccount                
+                - controltower:DescribeManagedAccount
+                - organizations:DescribeAccount
+                - organizations:DescribeOrganization
+                - s3:GetObject
+                - sso:AssociateProfile
+                - sso:AttachManagedPolicyToPermissionSet
+                - sso:CreateAccountAssignment
+                - sso:CreateApplicationInstance                                
+                - sso:CreateProfile
+                - sso:CreateTrust
+                - sso:DeletePermissionsPolicy
+                - sso:DescribeRegisteredRegions                
+                - sso:DetachManagedPolicyFromPermissionSet
+                - sso:GetApplicationInstance
+                - sso:GetPermissionSet                
+                - sso:GetProfile
+                - sso:GetSSOStatus
+                - sso:GetTrust                
+                - sso:ListDirectoryAssociations
+                - sso:ListPermissionSets
+                - sso:ListProfileAssociations
+                - sso-directory:AddMemberToGroup
+                - sso-directory:CreateUser
+                - sso-directory:DescribeGroups
+                - sso-directory:DescribeDirectory
+                - sso-directory:GetUserPoolInfo                                
+                - sso-directory:ListMembersInGroup
+                - sso-directory:SearchGroups
+                - sso-directory:SearchUsers
+                - sso:UpdateProfile
+                - sso:UpdateTrust                
+          Resource: "*"
+
+        - Sid: "VisualEditor1"
+          Effect: "Allow"
+          Action:
+                - organizations:DescribeAccount          
+                - organizations:DescribeOrganization
+                - organizations:DescribeOrganizationalUnit
+                - organizations:MoveAccount
+                - organizations:UpdateOrganizationalUnit
+                - servicecatalog:DescribeProduct
+                - servicecatalog:DescribeProvisioningArtifact
+                - servicecatalog:DescribeProvisioningParameters
+                - servicecatalog:ListProvisioningArtifacts
+                - servicecatalog:ProvisionProduct
+                - sts:AssumeRole
+          Resource:
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:/*"
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:portfolio/${SCPortafolioID}"                
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:product/${SCProductID}"
+                - !Sub "arn:aws:iam::${CuentaOrigen}:role/${RolOrigen}"
+                - !Sub "arn:aws:organizations::${AWS::AccountId}:account/ou-*/*"
+                - !Sub "arn:aws:organizations::${AWS::AccountId}:organization/${OU}"
+                - !Sub "arn:aws:organizations::${AWS::AccountId}:ou/ou-*/ou-*"
+                - !Sub "arn:aws:sts::${CuentaOrigen}:assumed-role/${RolOrigen}"
+
+        - Sid: "VisualEditor2"
+          Effect: "Allow"
+          Action: 
+                - servicecatalog:DescribeProduct 
+                - servicecatalog:DescribeProvisioningArtifact
+                - servicecatalog:DescribeProvisioningParameters
+                - servicecatalog:ListProvisioningArtifacts
+                - servicecatalog:ProvisionProduct
+          Resource: !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:/*"
+
+        - Sid: "VisualEditor3"
+          Effect: "Allow"
+          Action: servicecatalog:DescribeProvisionedProduct
+          Resource:
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:/*"
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:portfolio/${SCPortafolioID}"                
+                - !Sub "arn:aws:catalog:${AWS::Region}:${AWS::AccountId}:product/${SCProductID}"
+                          
+      Roles:
+      - Ref: "LambdaExecutionRole"
+      Users: []
+
+  PortfolioPrincipalAssociation:
+    Type: AWS::ServiceCatalog::PortfolioPrincipalAssociation
+    Properties:
+      PortfolioId: !Ref SCPortafolioID
+      PrincipalType: IAM
+      PrincipalARN: !GetAtt LambdaExecutionRole.Arn

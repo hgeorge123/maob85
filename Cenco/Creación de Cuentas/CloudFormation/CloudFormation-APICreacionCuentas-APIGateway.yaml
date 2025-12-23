@@ -1,0 +1,1063 @@
+---
+Metadata:
+  Description: Despliegue de APIGateway para gestion de creacion de cuentas.
+    
+Parameters:
+  LambdaBucket:
+    Type: "String"
+    Description: "S3 Bucket With Lambda Function"
+    Default: "cencosud-cfdn-prd"
+  LambdaFile:
+    Type: "String"
+    Description: "Lambda Function File on S3 Bucket"
+    Default: "CreateAccounts/CreateAccounts.zip"
+  LambdaSubnets:    
+    Type: "CommaDelimitedList"
+    Description: "Lambda Subnet"
+    Default: "subnet-01dfd2ea4adc6b125, subnet-0be5e70de37452017, subnet-08021862b3ec4ad12"
+  DDBMaestros:    
+    Type: "String"
+    Description: "Tabla de DynamoDB para Maestros"
+    Default: "cct-plataforma-ddb-maestros-gestion-creacion-cuentas"
+  DDBTickets:    
+    Type: "String"
+    Description: "Tabla de DynamoDB para Tickets"
+    Default: "cct-plataforma-ddb-gestion-creacion-cuentas"
+  SCProductID:    
+    Type: "String"
+    Description: "Product ID de Service Catalog"
+    Default: "prod-p3oluqr6ehtce"
+  SCProductName:    
+    Type: "String"
+    Description: "Product Name de Service Catalog"
+    Default: "AWS Control Tower Account Factory"
+  OUDestino:    
+    Type: "String"
+    Description: "OU Destino Temporal para Cuentas Nuevas "
+    Default: "test-enroll (ou-2a12-msk3sqe0)"
+  APICencoDesk:    
+    Type: "String"
+    Description: "URL API CencoDesk"
+    Default: "https://api-cdt-cencodesk-dev.cencosud.com/api"
+  APIKeyCencoDesk:    
+    Type: "String"
+    Description: "APIKEY CencoDesk"
+    Default: "586c2fd1-dcff-478c-8455-a79e00bf8fe3"
+  EspCencoDesk:    
+    Type: "String"
+    Description: "Especialista CencoDesk"
+    Default: "gcabrerap"
+  SNSDestino:    
+    Type: "String"
+    Description: "Correo Electronico de Destino para notificaciones SNS"
+    Default: "george.hernandezescorche@externos-ar.cencosud.com"
+  CuentaControlTower:    
+    Type: "String"
+    Description: "Id de Cuenta con el servicio de Control Tower"
+    Default: "058264396610"
+  RolControlTower:    
+    Type: "String"
+    Description: "Nombre de Rol de Administracion Control Tower"
+    Default: "cct-plataforma-sts-creacion-cuentas"    
+  VPCSG:    
+    Type: "String"
+    Description: "VPC para el Security Group"
+    Default: "vpc-0cc05cb8dda5bcdb0"
+  APIActiveDirectory:
+    Type: "String"
+    Description: "URL del API para consulta de datos de ActiveDirectory"
+    Default: "http://api-activedirectory.cencosud.corp/ad/find_all/"
+  OU:    
+    Type: "String"
+    Description: "Organizational Unit"
+    Default: "ou-2a12-msk3sqe0"
+        
+Resources:
+
+  LambdaIAMRole:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::Role"
+    DeletionPolicy: "Delete"
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/AWSServiceCatalogAdminFullAccess"
+      - "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+      - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+      - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      - "arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB"
+      MaxSessionDuration: 3600
+      RoleName: "cct-plataforma-gestion-creacion-cuentas-rol"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action: "sts:AssumeRole"
+          Effect: "Allow"
+          Principal:
+            Service:
+            - "lambda.amazonaws.com"
+            - "apigateway.amazonaws.com" 
+
+  LambdaIAMRoleManagedPolicy:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::ManagedPolicy"
+    DeletionPolicy: "Delete"
+    Properties:
+      ManagedPolicyName: "cct-plataforma-lambda-iam-role-policy"
+      Path: "/"
+      Description: ""
+      Groups: []
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Resource: !Sub "arn:aws:logs:${AWS::Region}::*"
+          Action: "logs:CreateLogGroup"
+          Effect: "Allow"
+        - Resource:
+          - !Sub "arn:aws:logs:${AWS::Region}::log-group:/aws/lambda/cct-plataforma-gestion-creacion-cuentas:*"
+          Action:
+          - "logs:CreateLogStream"
+          - "logs:PutLogEvents"
+          Effect: "Allow"
+        - Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*"
+          Action:
+          - "dynamodb:DeleteItem"
+          - "dynamodb:GetItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:UpdateItem"
+          Effect: "Allow"
+        - Resource: !Sub "arn:aws:iam::${CuentaControlTower}:role/${RolControlTower}"
+          Action: "sts:AssumeRole"
+          Effect: "Allow"
+      Roles:
+      - Ref: "LambdaIAMRole"
+      Users: []
+
+  #BLOQUE PRUEBA
+  EvAgIAMRole:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::Role"
+    DeletionPolicy: "Delete"
+    Properties:
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      RoleName: "cct-plataforma-eventbridge-apigateway-rol"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action: "sts:AssumeRole"
+          Effect: "Allow"
+          Principal:
+            Service: "events.amazonaws.com"
+  
+  EventBridgeApiGatewayRoleCustomPolicy:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::ManagedPolicy"
+    DeletionPolicy: "Delete"
+    Properties:
+      ManagedPolicyName: "cct-plataforma-EventBridge-ApiGateway"
+      Path: "/service-role/"
+      Description: ""
+      Groups: []
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        #PRUEBA
+        - Resource: !Join [ '', [!GetAtt LambdaFunction.Arn, '/*'] ]
+          Action:
+          - "execute-api:Invoke"
+          - "execute-api:ManageConnections"
+          Effect: "Allow"
+      Roles:
+      - Ref: "EvAgIAMRole"
+      Users: []
+
+  #FIN BLOQUE PRUEBA      
+
+  ApiGatewayRestApi:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::RestApi"
+    DeletionPolicy: "Delete"
+    Properties:
+      ApiKeySourceType: "HEADER"
+      EndpointConfiguration:
+        Types:
+        - "REGIONAL"
+      DisableExecuteApiEndpoint: false
+      Name: "cct-plataforma-gestion-creacion-cuentas-rest-api"
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*'
+      
+  ResourceMaestros:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: 'maestros'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  ResourceMaestrosPaises:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceMaestros
+      PathPart: 'paises'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  MaestrosPaisesGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceMaestrosPaises
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+
+  ResourceMaestrosProductos:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceMaestros
+      PathPart: 'productos'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  MaestrosProductosGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceMaestrosProductos
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+
+  ResourceMaestrosUN:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceMaestros
+      PathPart: 'unidades_negocio'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  MaestrosMaestrosUNGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceMaestrosUN
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+
+  ResourceMaestrosUNP:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceMaestros
+      PathPart: 'unidades_negocio_paises'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  MaestrosMaestrosUNPGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceMaestrosUNP
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+
+  ResourceMaestrosUNC:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceMaestros
+      PathPart: 'unidades_negocio_corporativo'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  MaestrosMaestrosUNCGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceMaestrosUNC
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+            
+  ResourceTickets:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: 'tickets'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  TicketsPost:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ResourceTickets
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+      
+
+  ResourceTicketsID:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceTickets
+      PathPart: '{id_ticket}'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  TicketsGet:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: GET
+      ResourceId: !Ref ResourceTicketsID
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+      
+  ResourceTicketsAccion:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ResourceTicketsID
+      PathPart: '{accion}'
+      RestApiId: !Ref ApiGatewayRestApi
+
+  TicketsPut:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaPermission
+    Properties:
+      ApiKeyRequired: True
+      AuthorizationType: NONE
+      HttpMethod: PUT
+      ResourceId: !Ref ResourceTicketsAccion
+      RestApiId: !Ref ApiGatewayRestApi
+      MethodResponses:
+        - StatusCode: '200'                    
+      
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        IntegrationResponses:
+            - StatusCode: '200'
+        RequestTemplates: 
+            application/json: |
+                ##  See https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+                ##  This template will pass through all parameters including path, querystring, header, stage variables, and context through to the integration endpoint via the body/payload
+                #set($allParams = $input.params())
+                {
+                "body-json" : $input.json('$'),
+                "params" : {
+                #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                "$type" : {
+                    #foreach($paramName in $params.keySet())
+                    "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                        #if($foreach.hasNext),#end
+                    #end
+                }
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "stage-variables" : {
+                #foreach($key in $stageVariables.keySet())
+                "$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+                    #if($foreach.hasNext),#end
+                #end
+                },
+                "context" : {
+                    "account-id" : "$context.identity.accountId",
+                    "api-id" : "$context.apiId",
+                    "api-key" : "$context.identity.apiKey",
+                    "authorizer-principal-id" : "$context.authorizer.principalId",
+                    "caller" : "$context.identity.caller",
+                    "cognito-authentication-provider" : "$context.identity.cognitoAuthenticationProvider",
+                    "cognito-authentication-type" : "$context.identity.cognitoAuthenticationType",
+                    "cognito-identity-id" : "$context.identity.cognitoIdentityId",
+                    "cognito-identity-pool-id" : "$context.identity.cognitoIdentityPoolId",
+                    "http-method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "source-ip" : "$context.identity.sourceIp",
+                    "user" : "$context.identity.user",
+                    "user-agent" : "$context.identity.userAgent",
+                    "user-arn" : "$context.identity.userArn",
+                    "request-id" : "$context.requestId",
+                    "resource-id" : "$context.resourceId",
+                    "resource-path" : "$context.resourcePath"
+                    }
+                }
+
+  ApiGatewayDeployment:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::Deployment"
+    DeletionPolicy: "Delete"
+    DependsOn:
+      - "MaestrosPaisesGet"
+    Properties:
+      RestApiId:
+        Ref: "ApiGatewayRestApi"
+
+  ApiGatewayStage:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::Stage"
+    DeletionPolicy: "Delete"
+    Properties:
+      RestApiId:
+        Ref: "ApiGatewayRestApi"
+      DeploymentId:
+        Fn::GetAtt:
+        - "ApiGatewayDeployment"
+        - "DeploymentId"
+      StageName: "cct"
+      CacheClusterSize: "0.5"
+      TracingEnabled: false
+      CacheClusterEnabled: false
+
+  ApiGatewayUsagePlan:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::UsagePlan"
+    DeletionPolicy: "Delete"
+    DependsOn:
+      - "ApiGatewayStage"    
+    Properties:
+      Description: ""
+      ApiStages:
+      - Stage: cct
+        ApiId:
+          Ref: "ApiGatewayRestApi"
+        Throttle: {}
+      UsagePlanName: "cct-plataforma-gestion-creacion-cuentas-usage-plan"
+      
+  ApiGatewayApiKey:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::ApiKey"
+    DeletionPolicy: "Delete"
+    Properties:
+      StageKeys: []
+      Value: "LRIJYgtc1Y42z3LA2FhR49B8V7JyugiG9mPst73A"
+      Enabled: true
+      Description: ""
+      Name: "cct-plataforma-gestion-creacion-cuentas-api-key"
+
+  ApiGatewayUsagePlanKey:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::ApiGateway::UsagePlanKey"
+    DeletionPolicy: "Delete"
+    Properties:
+      KeyType: "API_KEY"
+      UsagePlanId:
+        Ref: "ApiGatewayUsagePlan"
+      KeyId:
+        Ref: "ApiGatewayApiKey"      
+
+  DynamoDBTableMaestros:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: "Delete"
+    Properties:
+      SSESpecification:
+        SSEEnabled: false
+      TableName: !Ref DDBMaestros
+      AttributeDefinitions:
+      - AttributeType: "S"
+        AttributeName: "env"
+      ContributorInsightsSpecification:
+        Enabled: false
+      BillingMode: "PROVISIONED"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+      KeySchema:
+      - KeyType: "HASH"
+        AttributeName: "env"
+      DeletionProtectionEnabled: false
+      TableClass: "STANDARD"
+      Tags: []
+      TimeToLiveSpecification:
+        Enabled: false
+
+  DynamoDBTableTickets:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: "Delete"
+    Properties:
+      SSESpecification:
+        SSEEnabled: false
+      TableName: !Ref DDBTickets
+      AttributeDefinitions:
+      - AttributeType: "S"
+        AttributeName: "id_ticket"
+      ContributorInsightsSpecification:
+        Enabled: false
+      BillingMode: "PROVISIONED"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+      KeySchema:
+      - KeyType: "HASH"
+        AttributeName: "id_ticket"
+      DeletionProtectionEnabled: false
+      TableClass: "STANDARD"
+      Tags: []
+      TimeToLiveSpecification:
+        Enabled: false
+
+  SNSTopic:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::SNS::Topic"
+    DeletionPolicy: "Delete"
+    Properties:
+      FifoTopic: false
+      Subscription:
+      - Endpoint: !Ref SNSDestino
+        Protocol: "email"
+      TracingConfig: "PassThrough"
+      TopicName: "cct-plataforma-sns-gestion-creacion-cuentas-rest"
+
+  LambdaSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Security Group for cct-plataforma-lambda-create-account'
+      VpcId: !Ref VPCSG
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: 443
+          ToPort: 443
+          CidrIp: '0.0.0.0/0'
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          FromPort: -1
+          ToPort: -1
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: 'cct-plataforma-lambda-create-account'
+        - Key: owner
+          Value: 'cct-plataforma'
+                  
+  LambdaFunction:
+    UpdateReplacePolicy: "Retain"
+    Type: AWS::Lambda::Function
+    DeletionPolicy: "Delete"
+    Properties:
+      Handler: "lambda_function.lambda_handler"
+      Role: !GetAtt LambdaIAMRole.Arn      
+      Code:
+        S3Bucket: 
+            Ref: "LambdaBucket"
+        S3Key:
+            Ref: "LambdaFile"
+      MemorySize: 128
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      Timeout: 300
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      FileSystemConfigs: []
+      FunctionName: "cct-plataforma-gestion-creacion-cuentas"
+      Runtime: "python3.10"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/cct-plataforma-gestion-creacion-cuentas"
+      EphemeralStorage:
+        Size: 512
+      Architectures:
+      - "x86_64"
+      VpcConfig:
+        SecurityGroupIds:
+          - Ref: "LambdaSG"
+        SubnetIds: 
+          Ref: "LambdaSubnets"
+      Environment:           
+        Variables: 
+            DDBMaestros: 
+                Ref: "DDBMaestros"
+            DDBTickets: 
+                Ref: "DDBTickets"
+            SCProductID: 
+                Ref: "SCProductID"
+            SCProductName: 
+                Ref: "SCProductName"
+            OUDestino: 
+                Ref: "OUDestino"
+            APICencoDesk: 
+                Ref: "APICencoDesk"
+            APIKeyCencoDesk: 
+                Ref: "APIKeyCencoDesk"
+            EspCencoDesk: 
+                Ref: "EspCencoDesk"
+            CuentaControlTower:    
+                Ref: "CuentaControlTower"
+            RolControlTower:    
+                Ref: "RolControlTower"
+            APIActiveDirectory:
+                Ref: "APIActiveDirectory"    
+      Tags:
+        - Key: Name
+          Value: 'cct-plataforma-lambda-create-account'
+        - Key: owner
+          Value: 'cct-plataforma'
+          
+#BLOQUE PRUEBA
+  CustomEventBus:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::Events::EventBus"
+    DeletionPolicy: "Delete"
+    Properties:
+      Tags: []
+      Name: "cct-plataforma-eb-creacion-cuentas"
+
+  EventBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: AllowPutEventsFromOrganization
+      EventBusName: !Ref CustomEventBus
+      Statement:
+        Sid: AllowPutEventsFromOrganization
+        Effect: Allow
+        Principal: '*'
+        Action: events:PutEvents
+        Condition:
+          StringEquals:
+            aws:PrincipalOrgID: !Ref OU
+        Resource:
+          Fn::GetAtt:
+            - CustomEventBus
+            - Arn
+    DependsOn:
+      - CustomEventBus      
+
+  EventRuleAccountCreate:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::Events::Rule"
+    DeletionPolicy: "Delete"
+    Properties:
+      EventBusName: !Ref CustomEventBus
+      EventPattern:
+        detail-type:
+        - "AWS Service Event via CloudTrail"
+        source:
+        - "aws.controltower"
+        detail:
+          serviceEventDetails:
+            createManagedAccountStatus:
+              state:
+              - "SUCCEEDED"
+          eventName:
+          - "CreateManagedAccount"
+      Targets:
+      - Id: "Id62b30a44-0353-4d47-899b-021fa1af1acd"
+        HttpParameters:
+          PathParameterValues:
+              - '0'
+              - cuenta_creada
+          HeaderParameters:
+            #x-api-key: !GetAtt ApiGatewayApiKey.Value #"LRIJYgtc1Y42z3LA2FhR49B8V7JyugiG9mPst73A"
+            x-api-key: "LRIJYgtc1Y42z3LA2FhR49B8V7JyugiG9mPst73A"
+          QueryStringParameters: {}
+        Arn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/${ApiGatewayStage}/PUT/tickets/*/*
+        RoleArn: !GetAtt EvAgIAMRole.Arn
+      Id: "cct-plataforma-er-account-create"
+      State: "ENABLED"
+      Name: "cct-plataforma-er-account-create"
+    DependsOn:
+      - CustomEventBus      
+#FIN BLOQUE PRUEBA
