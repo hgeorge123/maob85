@@ -1,0 +1,429 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "creacion_cuentas_v2025",
+    "version" : "2025-05-12T05:16:36Z"
+  },
+  "servers" : [ {
+    "url" : "https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/{basePath}",
+    "variables" : {
+      "basePath" : {
+        "default" : "test"
+      }
+    }
+  } ],
+  "paths" : {
+    "/business_units" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/groups_and_permissions" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/accounts_types" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/account/{ID}" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "ID",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      },
+      "put" : {
+        "parameters" : [ {
+          "name" : "ID",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/account" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      },
+      "post" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/clouds" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/environments" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/stacksets" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/countries" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-api/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\n#set($allParams = $input.params())\r\n{\r\n\"method\" : \"$context.httpMethod\", ## API method\r\n\"authcontext\" : \"$context.authorizer.stringkey\", ## Optional output from Lambda Authorizers\r\n## passthrough body\r\n\"resource_path\" : \"$context.resourcePath\",\r\n\"body-json\" : $input.json('$'),\r\n## passthrough headers, querystrings and path parameters\r\n\"params\" : {\r\n#foreach($type in $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"$paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\n#end\r\n}\r\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Empty" : {
+        "title" : "Empty Schema",
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "api_key" : {
+        "type" : "apiKey",
+        "name" : "x-api-key",
+        "in" : "header"
+      }
+    }
+  }
+}

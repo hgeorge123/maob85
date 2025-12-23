@@ -1,0 +1,73 @@
+{
+    "ID": {
+      "S": "89782"
+    },
+    "account_name": {
+      "S": "Cencosud_ADV_CO_Test"
+    },
+    "account_number": {
+      "S": ""
+    },
+    "agp_number": {
+      "S": ""
+    },
+    "business_unit": {
+      "S": "ADV"
+    },
+    "cloud": {
+      "S": ""
+    },
+    "country": {
+      "S": "CO"
+    },
+    "description": {
+      "S": "caca pichi"
+    },
+    "email_status": {
+      "S": "PENDING"
+    },
+    "environment": {
+      "S": "Test"
+    },
+    "events_log": {
+      "L": [
+        {
+          "M": {
+            "event": {
+              "S": "Request Created"
+            },
+            "unix_timestamp": {
+              "N": "1747032715"
+            }
+          }
+        }
+      ]
+    },
+    "informed_by": {
+      "S": "guillermo.cabrera@cencosud.cl"
+    },
+    "owner": {
+      "S": ""
+    },
+    "pep": {
+      "S": "dhdsh-djdsjs-232j23"
+    },
+    "product": {
+      "S": ""
+    },
+    "request_status": {
+      "S": "CREATED"
+    },
+    "root_email": {
+      "S": "cuentas+aws.co.adv.test@cencosud.com"
+    },
+    "sso_lastname": {
+      "S": "CO Test"
+    },
+    "sso_name": {
+      "S": "Cencosud ADV"
+    },
+    "technical": {
+      "S": ""
+    }
+  }

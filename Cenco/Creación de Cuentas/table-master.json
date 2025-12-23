@@ -1,0 +1,147 @@
+{
+  "ID": {
+    "S": "1"
+  },
+  "accounts_types": {
+    "M": {
+      "DATA": {
+        "S": "DATA"
+      },
+      "DL": {
+        "S": "DEFAULT"
+      },
+      "DF": {
+        "S": "DIGITAL FACTORY"
+      },
+      "PUL": {
+        "S": "PULSAR"
+      }
+    }
+  },
+  "business_units": {
+    "M": {
+      "ADV": {
+        "S": "ADV"
+      },
+      "BOF": {
+        "S": "BOF"
+      },
+      "CP": {
+        "S": "CP"
+      },
+      "HI": {
+        "S": "HI"
+      },
+      "RRHH": {
+        "S": "RRHH"
+      },
+      "SAPSM": {
+        "S": "SAPSM"
+      },
+      "SM": {
+        "S": "SM"
+      },
+      "TXD": {
+        "S": "TXD"
+      }
+    }
+  },
+  "clouds": {
+    "M": {
+      "AWS": {
+        "S": "AWS"
+      },
+      "AZURE": {
+        "S": "AZURE"
+      },
+      "GCP": {
+        "S": "GCP"
+      },
+      "OCI": {
+        "S": "OCI"
+      }
+    }
+  },
+  "countries": {
+    "M": {
+      "AR": {
+        "S": "Argentina"
+      },
+      "BR": {
+        "S": "Brasil"
+      },
+      "CL": {
+        "S": "Chile"
+      },
+      "CO": {
+        "S": "Colombia"
+      },
+      "CORP": {
+        "S": "Corporativo"
+      },
+      "PE": {
+        "S": "Peru"
+      }
+    }
+  },
+  "environments": {
+    "M": {
+      "PROD": {
+        "S": "PRODUCTION"
+      },
+      "TEST": {
+        "S": "TEST"
+      }
+    }
+  },
+  "finops_approvers": {
+    "L": [
+      {
+        "S": "a@a.com"
+      }
+    ]
+  },
+  "groups_and_permissions": {
+    "M": {
+      "DEFAULT": {
+        "M": {
+          "844844f8-10c1-702f-334e-b0f99990a6f5": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-8a05e3dbcef70d14"
+              }
+            ]
+          },
+          "a4f89468-00b1-7089-2590-2fdcb1df14e9": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-8a05e3dbcef70d14"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-c54b3d63ffd6f5dc"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "platform_approvers": {
+    "L": [
+      {
+        "S": "a@a.com"
+      }
+    ]
+  },
+  "stacksets": {
+    "M": {
+      "DEFAULT": {
+        "L": [
+          {
+            "S": "secret-ejemplo"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,249 @@
+{
+    "data": {
+        "_id": "6644e75f354bff8df6fdb8f5",
+        "ticketNumber": 1,
+        "status": "OPEN",
+        "expired": false,
+        "isActive": true,
+        "hasCustomFields": true,
+        "hasSurveyComplete": false,
+        "wasReopened": false,
+        "pin": null,
+        "parent": null,
+        "resolutionDate": null,
+        "dataCustomFields": [
+            {
+                "type": "user",
+                "label": "Responsable Tecnico",
+                "value": "ama0527"
+            },
+            {
+                "type": "user",
+                "label": "Owner de Cuenta",
+                "value": "lusottil"
+            },
+            {
+                "type": "select_api",
+                "label": "Unidades de Negocio",
+                "value": {
+                    "value": "HI",
+                    "description": "HI"
+                }
+            },
+            {
+                "type": "select_api",
+                "label": "Cloud",
+                "value": {
+                    "value": "AWS",
+                    "description": "AWS"
+                }
+            },            
+            {
+                "type": "select_api",
+                "label": "Account Type",
+                "value": {
+                    "value": "DEFAULT",
+                    "description": "DEFAULT"
+                }
+            },                        
+            {
+                "type": "select_api",
+                "label": "Pais",
+                "value": {
+                    "value": "AR",
+                    "description": "Argentina"
+                }
+            },
+            {
+                "type": "select",
+                "label": "Ambiente",
+                "value": "Test"
+            },
+            {
+                "type": "input",
+                "label": "PEP",
+                "value": "dhdsh-djdsjs-232j23"
+            }
+        ],
+        "createdAt": "2024-05-15T16:48:31.120Z",
+        "children": [],
+        "additionalProps": [],
+        "updatedAt": "2024-05-15T16:49:59.007Z",
+        "__v": 0,
+        "category": {
+            "_id": "64c83c0525c9b61ceb418c16",
+            "name": "Respaldo"
+        },
+        "country": "Chile",
+        "criticality": {
+            "_id": "641a6d87306e50f2407d2db4",
+            "name": [
+                {
+                    "language": "es",
+                    "value": "Ninguna"
+                },
+                {
+                    "language": "en",
+                    "value": "None"
+                },
+                {
+                    "language": "pt",
+                    "value": "Nenhum"
+                }
+            ],
+            "order": 5,
+            "code": "NONE"
+        },
+        "description": "caca pichi",
+        "expirationDate": "2024-05-15T17:48:31.120Z",
+        "informedBy": {
+            "_id": "64c8540b52a17c42ea5b8776",
+            "displayName": "Cabrera Puentes, Guillermo",
+            "email": "guillermo.cabrera@cencosud.cl",
+            "userAd": "gcabrerap",
+            "phone": "56981599132",
+            "notifications": true,
+            "givenName": "Guillermo",
+            "isVip": false
+        },
+        "location": "ADMINISTRACIÓN FLORIDA CENTER",
+        "locationDetail": {
+            "_id": "64c83cd10313af0b95323f63",
+            "name": "Administración Florida Center",
+            "country": {
+                "_id": "6425d085725dfcfa9d998ff5",
+                "name": [
+                    {
+                        "language": "es",
+                        "value": "Chile"
+                    },
+                    {
+                        "language": "pt",
+                        "value": "Chile"
+                    },
+                    {
+                        "language": "en",
+                        "value": "Chile"
+                    }
+                ]
+            },
+            "site": "Chile Adm Centrales",
+            "businessUnit": "Areas Corp. y De Apoyo",
+            "flag": "Administracion Central"
+        },
+        "petition": {
+            "_id": "66390eb26bb05a08b0d76cd3",
+            "petitionName": "Cloud AWS",
+            "sla": 1,
+            "criticality": {
+                "_id": "641a6d87306e50f2407d2db4",
+                "name": [
+                    {
+                        "language": "es",
+                        "value": "Ninguna"
+                    },
+                    {
+                        "language": "en",
+                        "value": "None"
+                    },
+                    {
+                        "language": "pt",
+                        "value": "Nenhum"
+                    }
+                ],
+                "order": 5,
+                "code": "NONE"
+            },
+            "isNotFound": false,
+            "operationalWindow": {
+                "_id": "6568dd680451000814331c51",
+                "name": [
+                    {
+                        "language": "es",
+                        "value": "Lunes a Viernes 8:00 a 18:00"
+                    },
+                    {
+                        "language": "en",
+                        "value": "Monday to Friday 8:00 to 18:00"
+                    },
+                    {
+                        "language": "pt",
+                        "value": "Segunda a Sexta-feira das 8:00 às 18:00"
+                    }
+                ],
+                "code": "MONDAY-TO-FRIDAY-8:00-TO-18:00"
+            }
+        },
+        "reportMode": "Centro de Soluciones",
+        "solverGroup": {
+            "_id": "64d2da0a3babb90cb4111463",
+            "name": "Aperturas y Proyectos Operaciones TI CL",
+            "administrativeUnit": {
+                "_id": "64a79566204fa4636335d941",
+                "name": "Area de Sistemas - Operaciones TI"
+            },
+            "functionalUnit": {
+                "_id": "64a7950fe04b0b8d629dcb71",
+                "name": "Operaciones Chile"
+            }
+        },
+        "type": {
+            "_id": "641a6d8c306e50f2407d2db6",
+            "name": [
+                {
+                    "language": "es",
+                    "value": "Solicitud"
+                },
+                {
+                    "language": "en",
+                    "value": "Request"
+                },
+                {
+                    "language": "pt",
+                    "value": "Solicitação"
+                }
+            ],
+            "code": "REQUEST"
+        },
+        "userAffected": {
+            "_id": "64c8540b52a17c42ea5b8776",
+            "displayName": "Cabrera Puentes, Guillermo",
+            "email": "guillermo.cabrera@cencosud.cl",
+            "userAd": "gcabrerap",
+            "phone": "56981599132",
+            "notifications": true,
+            "givenName": "Guillermo",
+            "isVip": false
+        },
+        "event": [
+            {
+                "user": {
+                    "userAd": "gcabrerap",
+                    "displayName": "Cabrera Puentes, Guillermo"
+                },
+                "type": "CHANGE_STATUS",
+                "date": "2024-05-15T16:49:31.933Z",
+                "context": {
+                    "changes": {
+                        "from": "CREATED",
+                        "to": "OPEN"
+                    }
+                }
+            }
+        ],
+        "views": [
+            {
+                "displayName": "Cabrera Puentes, Guillermo",
+                "userAd": "GCabreraP",
+                "lastViewDate": "2024-05-15T16:49:59.007Z",
+                "allViews": [
+                    {
+                        "viewDate": "2024-05-15T16:49:59.007Z"
+                    }
+                ]
+            }
+        ],
+        "hoursExpired": 0,
+        "attachment": []
+    }
+}

@@ -1,0 +1,57 @@
+{'Records': 
+    [
+        {   'messageId': '72a0da00-292d-4483-8c54-2a93c929e0d6', 
+            'receiptHandle': 'AQEBOQ0y0VBpU7SpGuNGl5W4WCu0RpxpxbzcvN/EXCfpH0PQpsdWn7uADcbH04zK9SLnyLbCBf6PdSRMFjHhurxfeBQ0kyAYCWjkLf6pHbO5wPUuFLKMoUGJ12Mhi3sk8gk4HNIpTU+gEAL7gBl4uUd8EqSlTc//oXUD9dPKIFIjTOYi2u2k55FLCGnpXSVULWPIvuUnBYoSrOOdIOKyCsa7DfsK5nmKXCpAlV+ALllNmy8PYo/IgIzhi5jRzrkSjTA5UeSBkw+gUSv30GvLYIF/ey3muh21s/sPYp8GoygFI5c=',
+            'body': 
+                '{
+                    "eventID":"0002ff5d70980a91844f2f0a4755aa77",
+                    "eventName":"INSERT",
+                    "eventVersion":"1.1",
+                    "eventSource":"aws:dynamodb",
+                    "awsRegion":"us-east-1",
+                    "dynamodb":{
+                        "ApproximateCreationDateTime":1747020012,
+                        "Keys":{"ID":{"S":"89782"}},
+                        "NewImage":{
+                            "owner":{"S":""},
+                            "account_number":{"S":""},
+                            "country":{"S":"CO"},
+                            "events_log":{"L":[{"M":{"unix_timestamp":{"N":"1747020012"},"event":{"S":"Request Created"}}}]},
+                            "product":{"S":""},
+                            "sso_lastname":{"S":"CO Test"},
+                            "technical":{"S":""},
+                            "description":{"S":"caca pichi"},
+                            "informed_by":{"S":"guillermo.cabrera@cencosud.cl"},
+                            "root_email":{"S":"cuentas+aws.co.adv.test@cencosud.com"},
+                            "business_unit":{"S":"ADV"},
+                            "email_status":{"S":"PENDING"},
+                            "cloud":{"S":""},
+                            "sso_name":{"S":"Cencosud ADV"},
+                            "environment":{"S":"Test"},
+                            "account_name":{"S":"Cencosud_ADV_CO_Test"},
+                            "agp_number":{"S":""},
+                            "pep":{"S":"dhdsh-djdsjs-232j23"},
+                            "ID":{"S":"89782"},
+                            "status":{"S":"CREATED"}
+                        },
+                        "SequenceNumber":"4618600000000205987973504",
+                        "SizeBytes":395,
+                        "StreamViewType":"NEW_AND_OLD_IMAGES"},
+                        "eventSourceARN":"arn:aws:dynamodb:us-east-1:058264396610:table/table_registry/stream/2025-05-12T02:19:58.927"
+                }', 
+                        'attributes': {
+                            'ApproximateReceiveCount': '1', 
+                            'SentTimestamp': '1747020486133', 
+                            'SequenceNumber': '18893981318159599616', 
+                            'MessageGroupId': '1', 
+                            'SenderId': 'AROAQ3EGUENBIQXPUENA5:91c05d1a49f33e99bd5448ce5dbbb930', 
+                            'MessageDeduplicationId': '58ed616e0d5c60a725c09fa222e9bae9b3f6f1e9758a47f939beef37d0e82d61', 
+                            'ApproximateFirstReceiveTimestamp': '1747020486133'}, 
+                            'messageAttributes': {}, 
+                            'md5OfBody': '1ffff3749aea0504754c98e2bacccbf5', 
+                            'eventSource': 'aws:sqs', 
+                            'eventSourceARN': 'arn:aws:sqs:us-east-1:058264396610:cct-plataforma-ca-flow-sqs.fifo', 
+                            'awsRegion': 'us-east-1'
+                        }
+    ]
+}

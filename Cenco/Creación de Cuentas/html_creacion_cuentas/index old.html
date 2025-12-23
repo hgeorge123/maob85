@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cencosud | AWS Accounts Creation Helper</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Flag Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert2-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.2/dist/sweetalert2.min.css">
+    
+    <style>
+        .form-container {
+            display: none;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Cencosud | Cloud Accounts Creation Helper</h1>
+        
+        <button id="showFormBtn" class="btn btn-primary mb-4">Show Request Form</button>
+        <button id="signOutBtn" class="btn btn-primary btn-danger mb-4">Sign-Out</button>
+        
+        <div id="formContainer" class="form-container">
+            <h2 class="mb-3">New Account Request</h2>
+            <form id="ticketForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="ticketNumber" class="form-label">Ticket Number:</label>
+                            <input type="text" class="form-control" id="ticketNumber" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description:</label>
+                            <input type="text" class="form-control" id="description" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="informedBy" class="form-label">Informed By</label>
+                            <input type="email" class="form-control" id="informedBy" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="business_unit" class="form-label">Business Unit</label>
+                            <select class="form-select select2" id="business_unit" required>
+                                <option value="">Select...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <select class="form-select select2" id="country" required>
+                                <option value="">Select</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="Producto" class="form-label">Product</label>
+                            <input type="text" class="form-control" id="Producto" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="environment" class="form-label">Environment</label>
+                            <select class="form-select select2" id="environment" required>
+                                <option value="">Select..</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="pep" class="form-label">PEP</label>
+                            <input type="text" class="form-control" id="pep">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cloud" class="form-label">Cloud</label>
+                            <select class="form-select select2" id="cloud" required>
+                                <option value="">Select..</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="account_type" class="form-label">Account Type</label>
+                            <select class="form-select select2" id="account_type" required>
+                                <option value="">Select..</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="owner" class="form-label">Owner</label>
+                            <input type="text" class="form-control" id="owner" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="technical" class="form-label">Technical</label>
+                            <input type="text" class="form-control" id="technical" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Request</button>
+                <button type="button" id="cancelFormBtn" class="btn btn-secondary">Cancel</button>
+            </form>
+        </div>
+        
+        <h2 class="mt-5 mb-3">Requests List</h2>
+        <table id="ticketsTable" class="table table-striped" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Ticket Number</th>
+                    <th>Country</th>
+                    <th>Account Type</th>
+                    <th>Business Unit</th>
+                    <th>Environment</th>
+                    <th>Actual Status</th>
+                    <th>Account Number</th>
+                    <th>Last Update</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- SweetAlert2-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.2/dist/sweetalert2.all.min.js"></script>
+    
+    <!-- AWS SDK & Cognito Helper-->
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.15/dist/amazon-cognito-identity.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1360.0.min.js"></script>
+
+    <script>
+        //DEV
+        //var API_URL = "https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/";
+        //var COGNITO_USER_POOL_ID = "us-east-1_5uVlmyRKb";
+        //var COGNITO_CLIENT_ID = "4t5rqcc3fticr96h0tmn5g6mmp";
+        //var LOGIN_URL = ""
+        //PROD
+        var API_URL = "https://l1oeohsq7i.execute-api.us-east-1.amazonaws.com/prod/";
+        var COGNITO_USER_POOL_ID = "us-east-1_pERLBCBP1";
+        var COGNITO_CLIENT_ID = "7jp3gag8s4i8897goubv7jlb40";
+        var LOGIN_URL = "https://elk-integracion-prod.auth.us-east-1.amazoncognito.com/login?client_id=4hlb1lgvj21cb9dee3f7tfklun&response_type=token&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=https%3A%2F%2Fd2gmp6913psueo.cloudfront.net%2Fsignin"
+                
+        var X_ACCESS_TOKEN = "";
+        var JWT_DATA;
+        var user_email;
+        var valid_users = [];
+        var finops_users = [];
+        var platform_users = [];
+        var is_finops_approver;
+        var is_platform_approver;
+
+        function getCookies(){
+            var pairs = document.cookie.split(";");
+            var cookies = {};
+            for (var i=0; i<pairs.length; i++){
+                var pair = pairs[i].split("=");
+                cookies[(pair[0]+'').trim()] = unescape(pair.slice(1).join('='));
+            }
+            return cookies;
+        }
+
+        function setCookie(name, value, hours) {
+            let expires = "";
+            if (hours) {
+                const date = new Date();
+                date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }        
+
+        function parseJwt (token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+
+        function check_user_profile(user_email){
+
+            $.ajax({
+                async: false,
+                url: API_URL + 'users/FINOPS',
+                type: 'GET',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                },
+                success: function(data) {
+                    finops_users = data;
+                },
+                error: function(error) {
+                    console.error('Error fetching finops users data:', error);
+                }
+            });
+
+            $.ajax({
+                async: false,
+                url: API_URL + 'users/PLATFORM',
+                type: 'GET',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                },
+                success: function(data) {
+                    platform_users = data;
+                },
+                error: function(error) {
+                    console.error('Error fetching platform users data:', error);
+                }
+            });
+
+            $.ajax({
+                async: false,
+                url: API_URL + 'users/ALL',
+                type: 'GET',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                },
+                success: function(data) {
+                    valid_users = data;
+                },
+                error: function(error) {
+                    console.error('Error fetching platform users data:', error);
+                }
+            });                        
+            
+            is_finops_approver = finops_users.includes(user_email);
+            is_platform_approver = platform_users.includes(user_email);
+            is_valid_user= valid_users.includes(user_email);
+            if (!is_valid_user) {
+                $('body').empty();
+                const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: "btn btn-success",
+                    cancelButton: "btn btn-danger"
+                },
+                buttonsStyling: false
+                });
+
+                swalWithBootstrapButtons.fire({
+                    title: "Error: Invalid User",
+                    text: "Forbidden User: "+ user_email,
+                    icon: "error"
+                }).then((result) => {
+                    document.cookie = "idToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                    document.cookie = "accessToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                    document.cookie = "refreshToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    window.location.href = LOGIN_URL
+                    //window.location.href = "/signout";
+                    //window.location.reload();
+
+                });
+                
+                
+            }
+            
+        }
+
+        $(document).ready(function() {    
+
+            const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: "btn btn-success",
+                cancelButton: "btn btn-danger"
+            },
+            buttonsStyling: false
+            });
+            
+            var url_hash = window.location.hash;
+            if (url_hash) {
+                var url_params = new URLSearchParams(url_hash.substring(1));
+                console.log("URL PARAMS:",url_params);
+                X_ACCESS_TOKEN = url_params.get("id_token");
+                setCookie('idToken', X_ACCESS_TOKEN, 1);
+                window.location.hash = "";
+            } else {
+                cookies = getCookies();
+                X_ACCESS_TOKEN = cookies.idToken;
+            }
+
+            if(!X_ACCESS_TOKEN) {
+                //show login
+                //show_login();
+                //return;
+                //window.location.href = "/signout";
+                window.location.href = LOGIN_URL
+            } 
+            JWT_DATA = parseJwt(X_ACCESS_TOKEN);
+            user_email = JWT_DATA.email || '';
+            check_user_profile(user_email);
+
+            window.addEventListener("pageshow", function(event) {
+                // Check if the page was loaded from the browser's cache (bfcache)
+                if (event.persisted) {
+                    window.location.reload(); // Force a full reload
+                }
+            });
+
+            $('.select2').select2({
+                width: '100%'
+            });
+            
+            $('#showFormBtn').click(function() {
+                $('#formContainer').toggle();
+                loadSelectOptions();
+            });
+
+            $('#signOutBtn').click(function() {
+                document.cookie = "idToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                document.cookie = "accessToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                document.cookie = "refreshToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                sessionStorage.clear();
+                localStorage.clear();
+                //window.location.href = "/signout";
+                window.location.reload();
+            });            
+            
+            $('#cancelFormBtn').click(function() {
+                $('#formContainer').hide();
+                $('#ticketForm')[0].reset();
+            });
+            
+            // Inicializar DataTable
+            var table = $('#ticketsTable').DataTable({
+                pageLength: 50,
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],                
+                ajax: {
+                    url: API_URL + 'account',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    dataSrc: '',
+                    error: function(xhr, error, thrown) {
+                        console.error('Error loading data:', error);
+                    }                    
+                },
+                columns: [
+                    { data: 'ID', title: 'ID', className: 'dt-body-center' },
+                    { 
+                        data: 'country', 
+                        title: 'Country',
+                        render: function(data, type, row){
+                            if (data === 'CORP') {
+                                return `<span class="badge bg-secondary">${data}</span>`;
+                            } else {
+                                return `
+                                            <span class="fi fi-${data.toLowerCase()} fis" style="margin-right: 5px"></span>
+                                            <span>${data}</span>
+                                        `;                                
+                            }
+                        }
+
+
+                    },
+                    { data: 'account_type', title: 'Account Type'},
+                    { data: 'business_unit', title: 'Business Unit'},
+                    { data: 'environment', title: 'Environment'},
+                    { data: 'request_status', title: 'Actual Status'},
+                    { data: 'account_number', title: 'Account Number'},
+                    { 
+                        data: null, 
+                        orderable: false,
+                        title: 'Last Update',
+                        render: function(data, type, row) {
+                            return `${data.events_log.slice(-1)[0].timestamp}`    
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function(data, type, row) {
+                                   
+                            const show_reject= (is_finops_approver || is_platform_approver)  && ['CREATED', 'FINOPS_APPROVED', 'PLATFORM_APPROVED'].includes(row.request_status);
+                            const show_finops= is_finops_approver && ['CREATED', 'PLATFORM_APPROVED'].includes(row.request_status);
+                            const show_platform= is_platform_approver && ['CREATED', 'FINOPS_APPROVED'].includes(row.request_status);
+                            
+                            
+                            return `
+                                <div class="btn-group" role="group">
+                                    <!-- Show Details-->
+                                    <button class="btn btn-sm btn-outline-primary view-details" data-id="${row.ID}" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+
+                                    <!-- FinOps Approval -->
+                                    ${show_finops ? `
+                                    <button class="btn btn-sm btn-outline-success finops-approval" data-id="${row.ID}" title="FinOps Approval">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    ` : ''}
+
+                                    <!-- Platform Approval -->
+                                    ${show_platform ? `
+                                    <button class="btn btn-sm btn-outline-info platform-approval" data-id="${row.ID}" title="Platform Approval">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    ` : ''}
+
+                                    <!-- Reject Button -->
+                                    ${show_reject ? `
+                                    <button class="btn btn-sm btn-outline-danger reject-ticket" data-id="${row.ID}" title="Reject">
+                                        <i class="fa-regular fa-circle-xmark"></i>
+                                    </button>
+                                    ` : ''}
+                                    
+                                </div>
+                            `;                                 
+                        }
+                    }
+                ],
+                order: [[0, 'desc']],
+                responsive: true,
+            });
+
+            $('#ticketsTable').on('click', '.view-details', function() {
+                const id = $(this).data('id');
+                const rowData = table.row($(this).closest('tr')).data();
+                show_details(rowData)
+            });
+            
+            $('#ticketsTable').on('click', '.finops-approval', function() {
+                const id = $(this).data('id');
+                swalWithBootstrapButtons.fire({
+                    title: "FinOps Approval Confirmation",
+                    text: "Do you really want to give FinOps Approval to Ticket: " + id + "?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: API_URL + 'account/' + id ,
+                            type: 'PUT',
+                            contentType: "application/json",
+                            dataType: "json",
+                            data: JSON.stringify({"action":"FINOPS_APPROVED","msteams_team":"FinOps","msteams_user":user_email}),                     
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                            },
+                            success: function(data) {
+                                swalWithBootstrapButtons.fire({
+                                    title: "FinOps Approval Response",
+                                    text: data,
+                                    icon: "info"
+                                });
+                                table.ajax.reload();
+                            },
+                            error: function(error) {
+                                console.error('FinOps Approval Error:', error);
+                            }
+                        });
+                        
+                    }
+                });
+            });
+            
+            $('#ticketsTable').on('click', '.platform-approval', function() {
+                const id = $(this).data('id');
+                swalWithBootstrapButtons.fire({
+                    title: "Platform Approval Confirmation",
+                    text: "Do you really want to give Platform Approval to Ticket: " + id + "?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: API_URL + 'account/' + id ,
+                            type: 'PUT',
+                            contentType: "application/json",
+                            dataType: "json",
+                            data: JSON.stringify({"action":"PLATFORM_APPROVED","msteams_team":"Platform","msteams_user":user_email}),                     
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                            },
+                            success: function(data) {
+                                swalWithBootstrapButtons.fire({
+                                    title: "Platform Approval Response",
+                                    text: data,
+                                    icon: "info"
+                                });
+                                table.ajax.reload();
+                            },
+                            error: function(error) {
+                                console.error('Platform Approval Error:', error);
+                            }
+                        });
+                        
+                    }
+                });
+
+            });
+
+            $('#ticketsTable').on('click', '.reject-ticket', function() {
+                const id = $(this).data('id');
+                
+                swalWithBootstrapButtons.fire({
+                    title: "Reject Request Confirmation",
+                    text: "Do you really want to reject Ticket: " + id + "?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+    
+                        swalWithBootstrapButtons.fire({
+                        title: 'Please provide the rejection reason',
+                        input: 'text', // Specifies a text input field
+                        inputLabel: 'Rejection Reason:', // Optional label for the input
+                        inputPlaceholder: 'Type here...', // Optional placeholder text
+                        showCancelButton: true, // Shows a cancel button
+                        inputValidator: (value) => { // Optional validation function
+                            if (!value) {
+                                return 'Please provide the rejection reason!';
+                            }
+                        }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                msteams_note = result.value;
+                                $.ajax({
+                                    url: API_URL + 'account/' + id ,
+                                    type: 'PUT',
+                                    contentType: "application/json",
+                                    dataType: "json",
+                                    data: JSON.stringify({"action":"REJECT"}),
+                                    data: JSON.stringify({"action":"REJECT","msteams_team": (is_finops_approver?"FinOps":(is_platform_approver?"Platform":"")) ,"msteams_user":user_email, "msteams_note":msteams_note}),
+                                    beforeSend: function(xhr) {
+                                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                                    },
+                                    success: function(data) {
+                                        swalWithBootstrapButtons.fire({
+                                            title: "Rejection Response",
+                                            text: data,
+                                            icon: "info"
+                                        });
+                                        table.ajax.reload();
+                                    },
+                                    error: function(error) {
+                                        console.error('Reject Error:', error);
+                                    }
+                                });
+                                
+                                
+                            }
+                        });  
+                        
+                    }
+                });
+
+            });
+
+            function loadSelectOptions() {
+                get_business_units();
+                get_countries();
+                get_environments();
+                get_clouds();
+                get_account_types();
+            }
+            
+            function get_business_units() {
+                $.ajax({
+                    url: API_URL + 'business_units',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        var select = $('#business_unit');
+                        select.empty();
+                        select.append('<option value="">Select..</option>');
+                        
+                        $.each(data, function(index, item) {
+                            select.append('<option value="' + item.id + '">' + item.value + '</option>');
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching business units :', error);
+                    }
+                });
+            }
+            
+            function get_countries() {
+                $.ajax({
+                    url: API_URL + 'countries',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        var select = $('#country');
+                        select.empty();
+                        select.append('<option value="">Select..</option>');
+                        
+                        $.each(data, function(index, item) {
+                            select.append('<option value="' + item.id + '">' + item.value + '</option>');
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching countries:', error);
+                    }
+                });
+            }
+            
+            function get_environments() {
+                $.ajax({
+                    url: API_URL + 'environments',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        var select = $('#environment');
+                        select.empty();
+                        select.append('<option value="">Select..</option>');
+                        
+                        $.each(data, function(index, item) {
+                            select.append('<option value="' + item.id + '">' + item.value + '</option>');
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching environments:', error);
+                    }
+                });
+            }
+            
+            function get_clouds() {
+                $.ajax({
+                    url: API_URL + 'clouds',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        var select = $('#cloud');
+                        select.empty();
+                        select.append('<option value="">Select..</option>');
+                        
+                        $.each(data, function(index, item) {
+                            select.append('<option value="' + item.id + '">' + item.value + '</option>');
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching clouds:', error);
+                    }
+                });
+            }
+            
+            function get_account_types() {
+                $.ajax({
+                    url: API_URL + 'accounts_types',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        var select = $('#account_type');
+                        select.empty();
+                        select.append('<option value="">Select..</option>');
+                        $.each(data, function(index, item) {
+                            select.append('<option value="' + item.id + '">' + item.value + '</option>');
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching accounts types:', error);
+                    }
+                });
+            }
+            
+            $('#ticketForm').submit(function(e) {
+                e.preventDefault();
+                ticketNumber = $("#ticketNumber").val();
+                description = $("#description").val();
+                informedBy = $("#informedBy").val();
+                technical =  $("#technical").val();
+                owner =  $("#owner").val();
+                business_unit_val =  $("#business_unit option:selected").val();
+                business_unit_text = $("#business_unit option:selected").text();
+                cloud_val =  $("#cloud option:selected").val();
+                cloud_text = $("#cloud option:selected").text();
+                account_type_val = $("#account_type option:selected").val();
+                account_type_text = $("#account_type option:selected").text();
+                country_val = $("#country option:selected").val();
+                country_text = $("#country option:selected").text();
+                environment_val = $("#environment option:selected").val();
+                environment_text = $("#environment option:selected").text();
+                pep = $("#pep").val();
+                producto = $("#Producto").val();
+
+                $.ajax({
+                    url: API_URL + 'account',
+                    type: 'POST',
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(
+                            {"data":
+                                {
+                                "ticketNumber": ticketNumber,
+                                "description": description,
+                                "informedBy": {"email":informedBy},
+                                "dataCustomFields":[
+                                    {
+                                        "type": "user",
+                                        "label": "Responsable Tecnico",
+                                        "value": technical
+                                    },
+                                    {
+                                        "type": "user",
+                                        "label": "Owner de Cuenta",
+                                        "value": owner
+                                    },
+                                    {
+                                        "type": "select_api",
+                                        "label": "Unidades de Negocio",
+                                        "value": {
+                                            "value": business_unit_val,
+                                            "description": business_unit_text
+                                        }
+                                    },
+                                    {
+                                        "type": "select_api",
+                                        "label": "Cloud",
+                                        "value": {
+                                            "value": cloud_val,
+                                            "description": cloud_text
+                                        }
+                                    },            
+                                    {
+                                        "type": "select_api",
+                                        "label": "Account Type",
+                                        "value": {
+                                            "value": account_type_val,
+                                            "description": account_type_text
+                                        }
+                                    },                        
+                                    {
+                                        "type": "select_api",
+                                        "label": "Pais",
+                                        "value": {
+                                            "value": country_val,
+                                            "description": country_text
+                                        }
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Ambiente",
+                                        "value": environment_val
+                                    },
+                                    {
+                                        "type": "input",
+                                        "label": "PEP",
+                                        "value": pep
+                                    },
+                                    {
+                                        "type": "input",
+                                        "label": "Producto",
+                                        "value": producto
+                                    }                                    
+
+                                ]
+                            }
+                        }
+                    ),                     
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-ACCESS-TOKEN', X_ACCESS_TOKEN);
+                    },
+                    success: function(data) {
+                        swalWithBootstrapButtons.fire({
+                            title: "Request Submit Response",
+                            text: data,
+                            icon: "info"
+                        });
+                        table.ajax.reload();
+                    },
+                    error: function(error) {
+                        console.error('Request Submit Error:', error);
+                    }
+                });
+                
+                $('#formContainer').hide();
+                $('#ticketForm')[0].reset();
+
+                // Recargar la tabla
+                table.ajax.reload();
+            });
+        });
+
+        
+        function show_details(ticketData) {
+            if (!$('#ticketDetailsModal').length) {
+                $('body').append(`
+                    <div class="modal fade" id="ticketDetailsModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Request Details - Ticket: <span id="ticketId"></span></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-primary text-white">
+                                                    <i class="fas fa-info-circle me-2"></i>Main Information
+                                                </div>
+                                                <div class="card-body" id="ticketMainInfo"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-info text-white">
+                                                    <i class="fas fa-cloud me-2"></i>Cloud Information
+                                                </div>
+                                                <div class="card-body" id="ticketCloudInfo"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card">
+                                        <div class="card-header bg-secondary text-white">
+                                            <i class="fas fa-history me-2"></i>Events Log
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group" id="ticketEventsLog"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+
+            $('#ticketId').text(ticketData.ID);
+            
+            $('#ticketMainInfo').html(`
+                <dl class="row">
+                    <dt class="col-sm-4">Request Status:</dt>
+                    <dd class="col-sm-8">
+                            ${ticketData.request_status}
+                    </dd>
+                    
+                    <dt class="col-sm-4">Description:</dt>
+                    <dd class="col-sm-8">${ticketData.description || ''}</dd>
+                    
+                    <dt class="col-sm-4">Informed By:</dt>
+                    <dd class="col-sm-8"><a target="_blank" href=mailto:"${ticketData.informed_by}">${ticketData.informed_by}</a></dd>
+                    
+                    <dt class="col-sm-4">Owner:</dt>
+                    <dd class="col-sm-8"><a target="_blank" href=mailto:"${ticketData.owner}">${ticketData.owner_name + ' (' + ticketData.owner_account + ')'}</a></dd>
+
+                    <dt class="col-sm-4">Technical:</dt>
+                    <dd class="col-sm-8"><a target="_blank" href=mailto:"${ticketData.technical}">${ticketData.technical}</a></dd>			
+                    
+                    <dt class="col-sm-4">Business Unit:</dt>
+                    <dd class="col-sm-8">${ticketData.business_unit || ''}</dd>
+                    
+                    <dt class="col-sm-4">Country:</dt>
+                    <dd class="col-sm-8">
+                        ${ticketData.country != "CORP" ? `
+                            <span class="fi fi-${ticketData.country.toLowerCase()}"></span>
+                            ${ticketData.country}
+                        ` : "<span>CORP</span>" }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Environment:</dt>
+                    <dd class="col-sm-8">${ticketData.environment || ''}</dd>
+
+                    <dt class="col-sm-4">PEP:</dt>
+                    <dd class="col-sm-8">${ticketData.pep || ''}</dd>
+
+                    <dt class="col-sm-4">Product:</dt>
+                    <dd class="col-sm-8">${ticketData.product || ''}</dd>
+                    
+                </dl>
+            `);
+            
+            $('#ticketCloudInfo').html(`
+                <dl class="row">
+                    <dt class="col-sm-4">Cloud Provider:</dt>
+                    <dd class="col-sm-8">
+                        ${ticketData.cloud ? `
+                            <i class="fab fa-${ticketData.cloud.toLowerCase()} me-2"></i>
+                            ${ticketData.cloud}
+                        ` : ''}
+                    </dd>
+
+                    <dt class="col-sm-4">Account Type:</dt>
+                    <dd class="col-sm-8">${ticketData.account_type || ''}</dd>
+
+                    <dt class="col-sm-4">Account Number:</dt>
+                    <dd class="col-sm-8">${ticketData.account_number || ''}</dd>
+
+                    <dt class="col-sm-4">Root Email:</dt>
+                    <dd class="col-sm-8">${ticketData.root_email || ''}</dd>
+
+                    
+                    <dt class="col-sm-4">Account Name:</dt>
+                    <dd class="col-sm-8">${ticketData.account_name || ''}</dd>
+                    
+                    <dt class="col-sm-4">SSO Name:</dt>
+                    <dd class="col-sm-8">${ticketData.sso_name || ''} ${ticketData.sso_lastname || ''}</dd>
+                    
+                </dl>
+            `);
+            
+            // Llenar el historial de eventos
+            const eventsLog = $('#ticketEventsLog');
+            eventsLog.empty();
+            
+            if (ticketData.events_log && ticketData.events_log.length > 0) {
+                ticketData.events_log.forEach(event => {
+                    const timestamp = event.timestamp || 'Unknown';
+                    const note = event.note ? `<small class="text-muted"><b>Note:</b> ${event.note}</small>` : '';
+                    const user = event.user ? `<small class="text-muted"><b>User:</b> ${event.user}</small>` : '';
+                    
+                    eventsLog.append(`
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${event.event}</h6>
+                                <small>${timestamp}</small>
+                            </div>
+                            ${note}
+                            ${user}
+                        </li>
+                    `);
+                });
+            } else {
+                eventsLog.append('<li class="list-group-item">No Events</li>');
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+            modal.show();
+        }
+
+        function show_login() {        
+            if (!$('#loginModal').length) {
+                $('body').empty();
+                $('body').append(`
+                    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Cencosud | Cloud Accounts Creation Helper | Login</h5>
+                                </div>
+                                <div class="modal-body">
+
+                                    <form id="loginForm">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="username" class="form-label">User:</label>
+                                                    <input type="text" class="form-control" id="username" autocomplete="username" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="password" class="form-label">Password:</label>
+                                                    <input type="password" class="form-control" id="password" autocomplete="current-password" required>
+                                                </div>                                                
+                                            </div>                                            
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" form="loginForm" class="btn btn-primary" data-bs-dismiss="modal">Login</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                document.getElementById('loginForm').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const swalWithBootstrapButtons = Swal.mixin({
+                    customClass: {
+                        confirmButton: "btn btn-success",
+                        cancelButton: "btn btn-danger"
+                    },
+                    buttonsStyling: false
+                    });
+
+                    const poolData = {
+                        UserPoolId:  COGNITO_USER_POOL_ID,
+                        ClientId: COGNITO_CLIENT_ID
+                    };
+
+                    let userPool;
+                    if (window.AmazonCognitoIdentity && AmazonCognitoIdentity.CognitoUserPool) {
+                        userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                    } else {
+                        swalWithBootstrapButtons.fire({
+                            title: "Error on Login",
+                            text: "Missing AWS Cognito Library",
+                            icon: "error"
+                        });
+                    }
+                    
+
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+
+                    console.log('[LOGIN] User:', username);
+
+                    const authenticationData = {
+                        Username: username,
+                        Password: password
+                    };
+
+                    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+                    const userData = {
+                        Username: username,
+                        Pool: userPool
+                    };
+
+                    const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+                    cognitoUser.authenticateUser(authenticationDetails, {
+                        onSuccess: function(result) {
+                            console.log('[LOGIN ÉXITO]', result);
+                            setCookie('idToken', result.getIdToken().getJwtToken(), 1);
+                            window.location.reload();
+                        },
+                        onFailure: function(err) {
+                            console.error('[LOGIN ERROR]', err);
+                            swalWithBootstrapButtons.fire({
+                                title: "Error on Login",
+                                text: err,
+                                icon: "error"
+                            }).then((result) => {
+                                window.location.reload();
+                            });
+                            
+                        }
+                    });
+                });                
+
+                const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+                modal.show();
+
+            }
+        }
+    </script>
+</body>
+</html>

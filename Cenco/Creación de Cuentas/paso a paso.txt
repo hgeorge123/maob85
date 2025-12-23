@@ -1,0 +1,432 @@
+Crear tablas de dynamodb table-master y table-registry
+
+Restaurar fila con datos maestros en table master: table-master.json
+
+Crear funcion lambda para acciones del API: cct-plataforma-ca-api
+	Variables de entorno:
+		DEBUG = "1"
+		DDBAccounts = "table_registry"
+		DDBMasters = "table_master"
+		DDBMastersID = "1"
+		APICencoDesk = "https://api-cdt-cencodesk-dev.cencosud.com/api"
+		APIKeyCencoDesk  "586c2fd1-dcff-478c-8455-a79e00bf8fe3" #SECRET
+		SpCencoDesk = "gcabrerap"
+		APIActiveDirectory = "http://api-activedirectory.cencosud.corp/ad/find_all/"
+	TODO: Definir Rol
+
+Crear ApiGateway con el archivo "esquema openapi.json"
+
+	Desplegar
+	Crear Clave de API, plan de uso y asociacion
+
+Crear un Secret en AWS Secret Manager con el API KEY, el nombre se especifica como variable de entorno en la funcion "cct-plataforma-ca-flow" para que se conecte con el api para obtener ciertos datos de las tablas maestras (se especificó que solo la función del api interactua con dynamodb)
+
+
+Crear funcion lambda para enviar notificaciones al ms teams: cct-plataforma-ca-flow
+	Variables de entorno:
+		DEBUG = "1"
+		API_MASTERS_URL = "https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test"
+		API_MASTERS_SECRET_NAME = "CA_API_MASTERS_APIKEY"
+		FINOPS_MSTEAMS_WEBHOOK = "https://your-finops-teams-webhook-url"
+		PLATFORM_MSTEAMS_WEBHOOK = "https://your-platform-teams-webhook-url"
+
+
+Crear funcion lambda para disparar la creacion de cuentas: cct-plataforma-ca-trigger.py
+	Variables de entorno:
+		DEBUG = bool(os.environ.get("DEBUG", "1"))
+		API_MASTERS_URL = "https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test"
+		API_MASTERS_SECRET_NAME = "CA_API_MASTERS_APIKEY"
+
+
+		ControlTowerAccount = "460928921112"
+		ControlTowerRole = "cct-plataforma-sts-creacion-cuentas"
+		SCProductID = "prod-xw5rukuzhillw"
+		#OU Destino ? verificar proceso de ou
+		NO STACKSETS -> Ahora desde api
+		
+		WAIT_TIME = 60
+		LAMBDA_ARN = "arn:aws:lambda:us-east-1:460928921112:function:cct-plataforma-ca-trigger"
+		ROLE_ARN = "arn:aws:iam::460928921112:role/cct-plataforma-scheduler-rol"
+		SSO_INSTANCE_ARN = "arn:aws:sso:::instance/ssoins-72235a26f6943cd8" #NUEVO
+		STACKSETS = "secret-ejemplo" #NUEVO, listado separado por comas, preguntar si va para el dynamodb?, probar con un stackset malo?
+		
+Activar DynamoDB stream en la tabla "table_registry" de dynamodb
+
+
+Crear SQS (cct-plataforma-sqs-ca-flow.fifo) que envie eventos a la lambda "cct-plataforma-ca-flow" (notificaciones teams)
+	Queue Visibility = Lambda Timeout
+Crear event bridge pipe 1 (cct-plataforma-pipe-ca-flow) desde el dynamodb stram al SQS (solo Inserts) Source dynamodb, target sqs
+	FILTRO:
+		{
+		  "eventName": ["INSERT"]
+		}
+		
+Crear SQS (cct-plataforma-sqs-ca-trigger.fifo) que envie eventos a la lambda "cct-plataforma-ca-trigger" (creacion de cuentas aprobadas)
+	Queue Visibility = Lambda Timeout
+Crear event bridge pipe 2 (cct-plataforma-pipe-ca-trigger) desde el dynamodb stram al SQS (solo updates donde el status anterior sea distnto de aprobado y el nuevo sea aprobado) Source dynamodb, target sqs
+	FILTRO 1:
+		{
+		  "dynamodb": {
+			"NewImage": {
+			  "request_status": {
+				"S": ["APPROVED"]
+			  }
+			},
+			"OldImage": {
+			  "request_status": {
+				"S": [{"anything-but": "APPROVED"}]
+			  }
+			}
+		  },
+		  "eventName": ["MODIFY"]
+		}
+
+	FILTRO 2:
+		{
+		  "dynamodb": {
+			"NewImage": {
+			  "request_status": {
+				"S": ["ACCOUNT_CREATED"]
+			  }
+			},
+			"OldImage": {
+			  "request_status": {
+				"S": [{"anything-but": "ACCOUNT_CREATED"}]
+			  }
+			}
+		  },
+		  "eventName": ["MODIFY"]
+		}
+
+	FILTRO 2:
+		{
+		  "dynamodb": {
+			"NewImage": {
+			  "request_status": {
+				"S": ["CHECKING_STACKSETS"]
+			  }
+			},
+			"OldImage": {
+			  "request_status": {
+				"S": [{"anything-but": "CHECKING_STACKSETS"}]
+			  }
+			}
+		  },
+		  "eventName": ["MODIFY"]
+		}
+		
+Crear EventRule: cct-plataforma-cross-account-event-rule apuntando al apigateway
+
+
+OJO TODO: Roles: ver CloudFormation-APICreacionCuentas-ControlTower.yaml
+
+cct-plataforma-sts-creacion-cuentas (ACCOUNT 1?):
+	OJO: Dar Permisos al portafolio de control tower
+	POLICY: cct-plataforma-sts-creacion-cuentas-policy
+	{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Action": [
+					"cloudformation:GetTemplateSummary",
+					"controltower:CreateManagedAccount",
+					"controltower:DeregisterManagedAccount",
+					"controltower:DescribeManagedAccount",
+					"organizations:DescribeAccount",
+					"organizations:DescribeOrganization",
+					"s3:GetObject",
+					"sso:AssociateProfile",
+					"sso:AttachManagedPolicyToPermissionSet",
+					"sso:CreateAccountAssignment",
+					"sso:CreateApplicationInstance",
+					"sso:CreateProfile",
+					"sso:CreateTrust",
+					"sso:DeletePermissionsPolicy",
+					"sso:DescribeRegisteredRegions",
+					"sso:DetachManagedPolicyFromPermissionSet",
+					"sso:GetApplicationInstance",
+					"sso:GetPermissionSet",
+					"sso:GetProfile",
+					"sso:GetSSOStatus",
+					"sso:GetTrust",
+					"sso:ListDirectoryAssociations",
+					"sso:ListPermissionSets",
+					"sso:ListProfileAssociations",
+					"sso-directory:AddMemberToGroup",
+					"sso-directory:CreateUser",
+					"sso-directory:DescribeGroups",
+					"sso-directory:DescribeDirectory",
+					"sso-directory:GetUserPoolInfo",
+					"sso-directory:ListMembersInGroup",
+					"sso-directory:SearchGroups",
+					"sso-directory:SearchUsers",
+					"sso:UpdateProfile",
+					"sso:UpdateTrust"
+				],
+				"Resource": "*",
+				"Effect": "Allow",
+				"Sid": "VisualEditor0"
+			},
+			{
+				"Action": [
+					"organizations:DescribeAccount",
+					"organizations:DescribeOrganization",
+					"organizations:DescribeOrganizationalUnit",
+					"organizations:MoveAccount",
+					"organizations:UpdateOrganizationalUnit",
+					"servicecatalog:DescribeProduct",
+					"servicecatalog:DescribeProvisioningArtifact",
+					"servicecatalog:DescribeProvisioningParameters",
+					"servicecatalog:ListProvisioningArtifacts",
+					"servicecatalog:ProvisionProduct",
+					"sts:AssumeRole"
+				],
+				"Resource": [
+					"arn:aws:catalog:us-east-1:468770292051:/*",
+					"arn:aws:catalog:us-east-1:468770292051:portfolio/port-ldiscky3obyrq",
+					"arn:aws:catalog:us-east-1:468770292051:product/prod-xw5rukuzhillw",
+					"arn:aws:iam::460928921112:role/cct-plataforma-ca-trigger-role-bq5arwjn", #OJO AQUI cct-plataforma-gestion-creacion-cuentas-rol
+					"arn:aws:organizations::468770292051:account/ou-*/*",
+					#"arn:aws:organizations::468770292051:organization/ou-eja9-zcwi99c5",
+					"arn:aws:organizations::468770292051:ou/o-r9v51rwg3e/ou-eja9-zcwi99c5",
+					"arn:aws:organizations::468770292051:ou/ou-*/ou-*",
+					"arn:aws:sts::460928921112:assumed-role/cct-plataforma-ca-trigger-role-bq5arwjn", #OJO AQUI cct-plataforma-gestion-creacion-cuentas-rol
+				],
+				"Effect": "Allow",
+				"Sid": "VisualEditor1"
+			},
+			{
+				"Action": [
+					"servicecatalog:DescribeProduct",
+					"servicecatalog:DescribeProvisioningArtifact",
+					"servicecatalog:DescribeProvisioningParameters",
+					"servicecatalog:ListProvisioningArtifacts",
+					"servicecatalog:ProvisionProduct"
+				],
+				"Resource": "arn:aws:catalog:us-east-1:468770292051:/*",
+				"Effect": "Allow",
+				"Sid": "VisualEditor2"
+			},
+			{
+				"Action": "servicecatalog:DescribeProvisionedProduct",
+				"Resource": [
+					"arn:aws:catalog:us-east-1:468770292051:/*",
+					"arn:aws:catalog:us-east-1:468770292051:portfolio/port-ldiscky3obyrq",
+					"arn:aws:catalog:us-east-1:468770292051:product/prod-xw5rukuzhillw"
+				],
+				"Effect": "Allow",
+				"Sid": "VisualEditor3"
+			}
+		]
+	}
+	TRUST:
+	{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Principal": {
+					#"AWS": "arn:aws:iam::460928921112:role/cct-plataforma-ca-trigger-role-bq5arwjn", #OJO AQUI cct-plataforma-gestion-creacion-cuentas-rol
+					"AWS": "arn:aws:iam::460928921112:role/service-role/cct-plataforma-ca-trigger-role-bq5arwjn"
+				},
+				"Action": "sts:AssumeRole"
+			},
+			{
+				"Effect": "Allow",
+				"Principal": {
+					"Service": "lambda.amazonaws.com"
+				},
+				"Action": "sts:AssumeRole"
+			}
+		]
+	}
+
+#REVISAR, YA NO?
+cct-plataforma-cross-account-event-bridge-role (ACCOUNT Control Tower)
+POLICY: cct-plataforma-cross-account-iam-policy
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "events:PutEvents",
+            "Resource": "arn:aws:events:us-east-1:460928921112:event-bus/cct-plataforma-eb-creacion-cuentas",
+            "Effect": "Allow"
+        }
+    ]
+}
+TRUST
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "events.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+
+cct-plataforma-eventbridge-apigateway-rol (ACCOUNT 1):
+
+#NO?
+CROSS ACCOUNT EVENT BUS (ACCOUNT 1)
+cct-plataforma-eb-creacion-cuentas
+POLICY:
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowAllAccountsFromOrganizationToPutEvents",
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "events:PutEvents",
+    "Resource": "arn:aws:events:us-east-1:460928921112:event-bus/cct-plataforma-eb-creacion-cuentas",
+    "Condition": {
+      "StringEquals": {
+        "aws:PrincipalOrgID": "o-r9v51rwg3e"
+      }
+    }
+  }]
+}
+
+EVENT RULE (ACCOUNT 1)
+cct-plataforma-eventbridge-apigateway-rol
+POLICY:
+
+TRUST:
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "events.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+
+NO Configurar SQS un TTL de 60 min para ejecutar la actualizacion de estatus STACKSETS_OK/STACKSETS_NO_OK
+
+Crear role para que el event scheduler pueda invocar la lambda... asociar arn a la lambda trigger: cct-plataforma-scheduler-rol
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scheduler.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+POLICY: cct-plataforma-scheduler-rol-policy
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:*"
+    }
+  ]
+}
+
+
+
+
+######################################################################################################################################################
+Flujo Pruebas 
+	Completo
+		POST https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/account datos de cuenta -> Se debe disparar funcion de notificacion, ver log, proceso de teams comentado
+		PUT https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/account/TICKET_AQUI ACTION {"action" : "FINOPS_APPROVED"} -> Revisar dynamodb
+		PUT https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/account/TICKET_AQUI ACTION {"action" : "PLATFORM_APPROVED"} -> Revisar dynamodb (estatus cambia a APPROVED) -> se debe disparar funcion de creacion
+		La automatizacion espera el evento de creacion exitosa/fallida -> En exitosa debe desencadenar la verificacion de los stacksets (exitoso/fallido)
+
+	Caso Reject (finops o platform)
+		POST https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/account datos de cuenta -> Se debe disparar funcion de notificacion, ver log, proceso de teams comentado
+		PUT https://3jh5iahh8h.execute-api.us-east-1.amazonaws.com/test/account/TICKET_AQUI ACTION {"action" : "REJECT"} -> Revisar dynamodb -> Termina automatización
+
+	TODO: Simular caso Stackset Fallido
+	TODO: Simular caso Creacion de cuenta Fallida
+	
+		
+
+
+
+Revisar
+
+RESULT=$(aws cloudformation list-stack-instances \
+  --stack-set-name CustomControlTower-SHARR-Member \
+  --query "Summaries[?Account=='012188478960'].{Account:Account,Region:Region,Status:StackInstanceStatus.DetailedStatus}" \
+  --output text)
+
+if [ -z "$RESULT" ]; then
+  echo "Cuenta 012188478960 no existente en el StackSet."
+else
+  echo "$RESULT"
+fi
+
+
+
+EventBridge Schedule body
+
+{
+	"method": "PUT",
+	"resource_path": "/account/{ID}",
+	"params":{
+		"path": {"ID":"XYZ"}
+	}
+	"body-json": {
+		"action":"CHECKING_STACKSETS",
+		"error_msg":""
+	}
+}
+
+
+
+
+
+NUEVO GEORGE:
+Agregar campo groups_and_permissions a tabla de maestros
+Agregar endpoint get para groups_and_permissions
+Modificar funcion de triger, obtener groups_and_permissions del api y asociar cuenta
+
+
+
+Grupo -> Pemisos
+
+90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd [GGG_AWS_CCT_GLOBAL_IaaSAdmin]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6 [CencoAdmPlataformas]
+
+90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5 [GGG_AWS_CCT_GLOBAL_SecAdmin]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183 [CencoSecurityAdm]
+
+90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161 [GGG_AWS_CCT_GLOBAL_BillingController]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094 [CencoBilling]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd [CencoBillingReadOnly]
+
+f4d874b8-9031-70c9-441c-1a4b322bedc7 [GGG_AWS_GLOBAL_BillingController_Read]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd [CencoBillingReadOnly]
+
+c408d488-7021-7086-8e2b-73227f6260b3 [GGG_AWS_GLOBAL_DevSecOps]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817 [CencoDevSecOps]
+
+90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2 [GGG_AWS_CCT_GLOBAL_NetworkAdmin]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c [CencoNetworkingAdministrator]
+
+64981498-a061-7070-6c12-9fa2d9107769 [GGG_AWS_Regional_Operaciones]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa [CencoIaaSOperator]
+
+90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440 [GGG_AWS_CCT_GLOBAL_IaaSOperator]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9 [CencoAdmOperaciones]
+	arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa [CencoIaaSOperator]
+
+
+	Asignar permisos -> Groups:

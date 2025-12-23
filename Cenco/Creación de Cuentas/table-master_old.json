@@ -1,0 +1,111 @@
+{
+    "ID": {
+      "S": "1"
+    },
+    "accounts_types": {
+      "M": {
+        "DATA": {
+          "S": "DATA"
+        },
+        "DEFAULT": {
+          "S": "DEFAULT"
+        },
+        "DIGITAL FACTORY": {
+          "S": "DIGITAL FACTORY"
+        },
+        "PULSAR": {
+          "S": "PULSAR"
+        }
+      }
+    },
+    "business_units": {
+      "M": {
+        "ADV": {
+          "S": "ADV"
+        },
+        "BOF": {
+          "S": "BOF"
+        },
+        "CP": {
+          "S": "CP"
+        },
+        "HI": {
+          "S": "HI"
+        },
+        "RRHH": {
+          "S": "RRHH"
+        },
+        "SAPSM": {
+          "S": "SAPSM"
+        },
+        "SM": {
+          "S": "SM"
+        },
+        "TXD": {
+          "S": "TXD"
+        }
+      }
+    },
+    "clouds": {
+      "M": {
+        "AWS": {
+          "S": "AWS"
+        },
+        "AZURE": {
+          "S": "AZURE"
+        },
+        "GCP": {
+          "S": "GCP"
+        },
+        "OCI": {
+          "S": "OCI"
+        }
+      }
+    },
+    "countries": {
+      "M": {
+        "AR": {
+          "S": "Argentina"
+        },
+        "BR": {
+          "S": "Brasil"
+        },
+        "CH": {
+          "S": "Chile"
+        },
+        "CO": {
+          "S": "Colombia"
+        },
+        "CORP": {
+          "S": "Corporativo"
+        },
+        "PE": {
+          "S": "Peru"
+        }
+      }
+    },
+    "environments": {
+      "M": {
+        "PRODUCTION": {
+          "S": "PRODUCTION"
+        },
+        "TEST": {
+          "S": "TEST"
+        }
+      }
+    },
+    "finops_approvers": {
+      "L": [
+        {
+          "S": "a@a.com"
+        }
+      ]
+    },
+    "platform_approvers": {
+      "L": [
+        {
+          "S": "a@a.com"
+        }
+      ]
+    }
+  }
