@@ -1,0 +1,112 @@
+configuration:
+  backupStorageLocation:
+  - name: default
+    bucket: ${BUCKET}
+    provider: aws
+    config:
+      region: ${REGION}
+      s3ForcePathStyle: false
+  volumeSnapshotLocation:
+  - config:
+      region: ${REGION}
+    provider: aws
+credentials:
+  useSecret: false
+image:
+  repository: velero/velero
+  tag: v1.17.1
+initContainers:
+- name: velero-plugin-for-aws
+  image: velero/velero-plugin-for-aws:v1.13.1
+  volumeMounts:
+  - mountPath: /target
+    name: plugins
+serviceAccount:
+  server:
+    create: true
+    name: velero
+    annotations:
+      eks.amazonaws.com/role-arn: ${ROLE}
+      meta.helm.sh/release-name: "velero"
+      meta.helm.sh/release-namespace: "velero"
+    labels:
+      app.kubernetes.io/instance: "velero"
+      app.kubernetes.io/name: "velero"
+      helm.sh/chart: "velero-11.2.0"
+  # Pod annotations for Prometheus
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8085"
+    prometheus.io/path: "/metrics"
+kubectl:
+  image:
+    repository: docker.io/bitnamilegacy/kubectl
+# Whether to create backupstoragelocation crd, if false => do not create a default backup location
+backupsEnabled: true
+# Whether to create volumesnapshotlocation crd, if false => disable snapshot feature
+snapshotsEnabled: true
+
+# Whether to deploy the node-agent daemonset.
+deployNodeAgent: false
+
+# This job upgrades the CRDs.
+upgradeCRDs: true
+
+# This job is meant primarily for cleaning up CRDs on CI systems.
+# Using this on production systems, especially those that have multiple releases of Velero, will be destructive.
+cleanUpCRDs: false
+
+# Test atte.- EBP
+metrics:
+  enabled: true
+
+schedules:
+  daily-backup:
+    disabled: false
+    schedule: "0 1 * * *"  # Todos los días a la 1 AM
+    template:
+      ttl: "720h"  # 30 días (30 * 24 = 336 horas)
+      includedNamespaces: 
+      - '*'
+      includedClusterScopedResources:
+      - '*'
+      includedNamespaceScopedResources:
+      - '*'
+
+  weekly-backup:
+    disabled: false
+    schedule: "0 2 * * 0"  # Todos los domingos a las 2 AM
+    template:
+      ttl: "2160h"  # 90 días (90 * 24 = 720 horas)
+      includedNamespaces: 
+      - '*'
+      includedClusterScopedResources:
+      - '*'
+      includedNamespaceScopedResources:
+      - '*'
+
+  monthly-backup:
+    disabled: false
+    schedule: "0 3 1 * *"  # El día 1 de cada mes a las 3 AM
+    template:
+      ttl: "4320h"  # 180 días (180 * 24 = 4320 horas)
+      includedNamespaces: 
+      - '*'
+      includedClusterScopedResources:
+      - '*'
+      includedNamespaceScopedResources:
+      - '*'
+
+nodeAgent:
+  podVolumePath: /var/lib/kubelet/pods
+  # Pod priority class name to use for the node-agent daemonset. Optional.
+  priorityClassName: ""
+  # Resource requests/limits to specify for the node-agent daemonset deployment. Optional.
+  # https://velero.io/docs/v1.6/customize-installation/#customize-resource-requests-and-limits
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi

@@ -1,0 +1,5 @@
+breaking: Cambio que rompe compatibilidad
+feat: Nueva característica
+fix: Corrección de error
+docs: Cambio en documentación
+refactor: Refactorización de código
