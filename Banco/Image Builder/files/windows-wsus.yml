@@ -1,0 +1,25 @@
+name: ConfigureWSUSForWindows
+description: Configures WSUS settings on a Windows instance based on cloud environment
+schemaVersion: 1.0
+
+phases:
+  - name: build
+    steps:
+      - name: SetWSUSServer
+        action: ExecutePowerShell
+        inputs:
+          commands:
+            - $wsus_server = 'cgsp1airvmlw01.sceuadpro.sceu.corp'
+            - $wsus_protocol = 'http://'
+            - $wsus_port = '8530'
+            - $wsus_url = "${wsus_protocol}${wsus_server}:${wsus_port}"
+            - $registryPath = 'HKLM:\Software\Policies\Microsoft\Windows\WindowsUpdate'
+            - $registryPathAU = 'HKLM:\Software\Policies\Microsoft\Windows\WindowsUpdate\AU'
+            - Set-ItemProperty -Path $registryPath -Name 'DoNotConnectToWindowsUpdateInternetLocations' -Value 1
+            - Set-ItemProperty -Path $registryPath -Name 'WUServer' -Value $wsus_url
+            - Set-ItemProperty -Path $registryPath -Name 'WUStatusServer' -Value $wsus_url
+            - Set-ItemProperty -Path $registryPath -Name 'UpdateServiceUrlAlternate' -Value ""
+            - Set-ItemProperty -Path $registryPath -Name 'DoNotEnforceEnterpriseTLSCertPinningForUpdateDetection' -Value 1
+            - Set-ItemProperty -Path $registryPath -Name 'SetProxyBehaviorForUpdateDetection' -Value 0
+            - Set-ItemProperty -Path $registryPathAU -Name 'UseWUServer' -Value 1
+            - Set-ItemProperty -Path $registryPathAU -Name 'NoAutoUpdate' -Value 1

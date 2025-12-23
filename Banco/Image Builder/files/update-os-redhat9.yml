@@ -1,0 +1,31 @@
+name: UpdateOSRedhat
+description: Update OS Redhat
+schemaVersion: 1.0
+
+phases:
+  - name: build
+    steps:
+      - name: UpdateOSRedhat
+        action: ExecuteBash
+        inputs:
+          commands:
+            - "sudo grubby --update-kernel=ALL --args=\"console=tty0 console=ttyS0,115200\""       
+            - "wget https://cgsp1airvmll-satssp-01.sceu.corp/pub/katello-ca-consumer-latest.noarch.rpm"
+            - "sudo rpm -Uvh katello-ca-consumer-latest.noarch.rpm"
+            - "sudo subscription-manager register --activationkey=\"NonPro-RHEL9\" --org=\"scf\" --force"
+            - "sudo yum update -y --security --bugfix"
+            - "sudo yum install -y cloud-init"
+            - "echo \"ssh_authorized_keys: 0\" | sudo tee -a /etc/cloud/cloud.cfg"
+            - "sed -i -e 's/disable_root: 1/disable_root: 0/g' /etc/cloud/cloud.cfg"
+            - "sed -i -e 's/ssh_deletekeys:   1/ssh_deletekeys: 0/g' /etc/cloud/cloud.cfg"
+            # - "echo 'ssh_authorized_keys:' > /etc/cloud/cloud.cfg.d/99_root_ssh_config.cfg"
+            # - "echo '  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3z16huXP2egV9Kf3qRw78bUo1cddbvu50XIiC2Ea7WakmK57hDTEetBUPzG0Au8hZuUe2S5ZKTGGb6w4+jAdlmrGZc2jC66YKOAJy2FoVCJPCXSahiYMKJtEz38/ITdGW5h4mpp/E3I+4rQ0qfDM26wI/sro4v0WnEr8P5nHMJCiG0Xys4gjrGbCzmg0s1JIqi0ot2VLNBD3wxNZ4+mgtdwKYpAQj/kN1S8pzhzJKqOQHBTCSLUIxx3mWsQqzPrIh3b3cJYZnVwk9SNPqrsv9ySZHliRj2qFpxqdtnAmzYYewwa8u0tbL4/7CP19Q49VGimBtYHepAeh3sklZIaKN' >> /etc/cloud/cloud.cfg.d/99_root_ssh_config.cfg"
+            # - "echo '  - ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAwK5wkAgoex48NfUSBpmUcQElSky4/9c7DlERfrEwhkU00E/+pIWpIZkHtpLsTgX95NeofXbvoo6S4XZtF+odL78LPj9pZaVYG2vvyW2cqn/HfulScaEXYfLv3QfzLI1begulv6rcXz4XEfj6L8F7iAaXvtzS/A8AoGK2VGVABIax8gY0pYM6+agxwTXgkHhsNxTw0gzj9pikGBYYsid/nvPiQBBhskhdJfgI+EbNccPbnWV6j3TTX+3N2ztppO7MqFHHCiBZmjrgDEkwiLdxcTQDqEW+i5hcRLbaP71OOYh2Ei6gGKe3GikMqeZMTE7rKsFc5Toy7JluhwhjI3mwQQ== cfme@CSLVCGCTRT0001' >> /etc/cloud/cloud.cfg.d/99_root_ssh_config.cfg"
+            # - "echo '  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3z16huXP2egV9Kf3qRw78bUo1cddbvu50XIiC2Ea7WakmK57hDTEetBUPzG0Au8hZuUe2S5ZKTGGb6w4+jAdlmrGZc2jC66YKOAJy2FoVCJPCXSahiYMKJtEz38/ITdGW5h4mpp/E3I+4rQ0qfDM26wI/sro4v0WnEr8P5nHMJCiG0Xys4gjrGbCzmg0s1JIqi0ot2VLNBD3wxNZ4+mgtdwKYpAQj/kN1S8pzhzJKqOQHBTCSLUIxx3mWsQqzPrIh3b3cJYZnVwk9SNPqrsv9ySZHliRj2qFpxqdtnAmzYYewwa8u0tbL4/7CP19Q49VGimBtYHepAeh3sklZIaKN' >> /etc/cloud/cloud.cfg.d/99_root_ssh_config.cfg"
+            - "sudo systemctl enable cloud-init-local.service"
+            - "sudo systemctl enable cloud-init.service"
+            - "sudo systemctl enable cloud-config.service"
+            - "sudo systemctl enable cloud-final.service"
+            - "sudo subscription-manager remove --all"
+            - "sudo subscription-manager unregister"
+            - "sudo subscription-manager clean"

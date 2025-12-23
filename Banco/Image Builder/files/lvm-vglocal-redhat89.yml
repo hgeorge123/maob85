@@ -1,0 +1,35 @@
+name: create-lvm-partition
+description: "Auto-detect disk and create LVM partition"
+schemaVersion: 1.0
+
+phases:
+  - name: build
+    steps:
+    - name: CreateLVM
+      action: ExecuteBash
+      inputs:
+        commands:
+        - |
+          #!/bin/bash
+          disk=$(lsblk -lnpd -o NAME,SIZE,FSTYPE | awk '$3=="" {print $1}' | head -n 1)
+          if [ -z "$disk" ]; then
+              echo "No se encontró ningún disco sin particionar."
+              exit 1
+          fi
+          echo "Creando una nueva partición en $disk"
+          {
+          echo n
+          echo p
+          echo
+          echo
+          echo
+          echo t
+          echo
+          echo 8e
+          echo w
+          } > fdisk_commands.txt
+          fdisk $disk < fdisk_commands.txt
+          part=$(ls ${disk}* | tail -n 1)
+          echo "Partición creada: $part"
+          pvcreate $part
+          vgcreate vgLocal $part

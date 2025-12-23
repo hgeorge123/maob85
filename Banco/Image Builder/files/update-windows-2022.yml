@@ -1,0 +1,9 @@
+name: Update Windows
+description: Updates Windows with the latest security updates.
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: UpdateOS
+        action: UpdateOS
+        timeoutSeconds: -1
