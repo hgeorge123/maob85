@@ -1,0 +1,21 @@
+module "this" {
+  source = "../"
+  # version = "~> 1.0"
+
+  # AWS NAMING
+  entity           = var.entity
+  environment      = var.environment
+  artifact_acronym = var.artifact_acronym
+  app_name         = var.app_name
+  function         = var.function
+  sequence         = var.sequence
+  parent_resource  = var.parent_resource
+
+  # AWS TAGGING - CCoE
+  mandatory_tags = var.mandatory_tags
+  custom_tags    = var.custom_tags
+}
+
+output "this" {
+  value = module.this
+}

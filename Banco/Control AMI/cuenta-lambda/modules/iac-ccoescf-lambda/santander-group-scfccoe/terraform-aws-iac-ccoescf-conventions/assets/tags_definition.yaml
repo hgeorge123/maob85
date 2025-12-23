@@ -1,0 +1,624 @@
+#--------------------
+# Definition for tags
+#--------------------
+artifact_version:
+  description: CCoE product/artifact version, e.g. 1.0.2. Useful in KPIs (obsolescence).
+  is_required: true
+  scope:
+    global:
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Automation
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - CCoE
+    value_source: Artifact
+
+artifact_name:
+  description: CCoE product/artifact name, e.g. EKS. Useful in KPIs (obsolescence).
+  is_required: true
+  scope:
+    global:
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Automation
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - CCoE
+    value_source: Artifact
+
+cloud_version:
+  description: Provider product native version, e.g. 1.14. Useful in KPIs (obsolescence).
+  is_required: true
+  scope:
+    global:
+  default_value:
+  - format:
+    - N/A
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Automation
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - CCoE
+    value_source: Artifact
+
+Name:
+  description: >
+    Name of the resource. Follows the Naming Convention. See [Naming and Tagging Building Block](https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block).
+  is_required: true
+  scope:
+    global:
+  default_value: # See https://developer.hashicorp.com/terraform/language/functions/format to define default_value format.
+  - condition: # Windows VMs. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-001VirtualMachinesnamingstandard
+      string_equals:
+        ${var.artifact_acronym}:
+        - ec2
+        ${var.mandatory_tags.os_platform}:
+        - ^(?i:windows)$
+    format:
+    - "%s%s%s%s%s%03d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - vml # TODO: if VM role should not be hardcoded, adapt ${var.artifact_acronym} to be used as VM role instead of `ec2` as generic artifact acronym or create a tag to control this.
+    - w # OS
+    - ${var.sequence}
+  - condition: # Non-windows VMs. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-001VirtualMachinesnamingstandard
+      string_equals:
+        ${var.artifact_acronym}:
+        - ec2
+    format:
+    - "%s%s%s%s%s-%s-%03d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - vml # TODO: if VM role should not be hardcoded, adapt ${var.artifact_acronym} to be used as VM role instead of `ec2` as generic artifact acronym.
+    - l # OS
+    - ${var.app_name}
+    - ${var.sequence}
+  - condition: # Windows VM associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-002VirtualMachinesassociatedresourcesnamingstandard
+      string_equals:
+        ${var.parent_resource.artifact_acronym}:
+        - ec2
+        ${var.mandatory_tags.os_platform}:
+        - ^(?i:windows)$
+    format:
+    - "%s%s%s%s%s%03d-%s%02d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - vml # TODO: if VM role should not be hardcoded, adapt ${var.artifact_acronym} to be used as VM role instead of `ec2` as generic artifact acronym.
+    - w # OS
+    - ${var.parent_resource.sequence}
+    - ${var.artifact_acronym}
+    - ${var.sequence}
+  - condition: # Non-Windows WM associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-002VirtualMachinesassociatedresourcesnamingstandard
+      string_equals:
+        ${var.parent_resource.artifact_acronym}:
+        - ec2
+    format:
+    - "%s%s%s%s%s-%s-%03d-%s%02d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - vml # TODO: if VM role should not be hardcoded, adapt ${var.artifact_acronym} to be used as VM role instead of `ec2` as generic artifact acronym.
+    - l # OS
+    - ${var.app_name}
+    - ${var.parent_resource.sequence}
+    - ${var.artifact_acronym}
+    - ${var.sequence}
+  - condition: # Associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-003OtherResourcesnamingstandard
+      string_equals:
+        ${local.is_associated_resource}:
+        - true
+    format:
+    - "%s%s%s%s%s%s%03d-%s%02d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - ${var.parent_resource.artifact_acronym}
+    - ${var.app_name}
+    - ${var.function}
+    - ${var.parent_resource.sequence}
+    - ${var.artifact_acronym}
+    - ${var.sequence}
+  - format: # Default naming format (Other resources). See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-004Otherassociatedresourcesnamingstandard
+    - "%s%s%s%s%s%s%03d"
+    - ${var.entity}
+    - ${var.environment}
+    - ${local.geo_region}
+    - ${var.artifact_acronym}
+    - ${var.app_name}
+    - ${var.function}
+    - ${var.sequence}
+  # Current validation pattern to match SCF naming conventions for resources (not VMs)
+  # validation:
+  #   pattern: ^[[:alnum:]]{24}(?:-[[:alpha:]]{3}[[:digit:]]{2})?$ # length(regexall("^[[:alnum:]]{24}(?:-[[:alpha:]]{3}[[:digit:]]{2})?$", var.mandatory_tags["Name"])) == 1
+  #   error_message: "`Name` tag must comply SCF Naming convention. See https://confluence.alm.europe.cloudcenter.corp/display/OPTIMUM/Naming+Convention+Excel+Simulator"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: DevOps
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: N/A
+
+cost_center:
+  description: >
+    This tag will report the cost center of the resource and need to be applied to every resource in the subscription. This will allow in the initial phase to control the country/project cost. The cost Center tag will be mandatory, and it will be applied via Policy upon the creation of accounts, so that the tag and its value are appended automatically to the resources created inside the account. Required to assign costs accordingly.
+  is_required: true
+  scope:
+    global:
+  validation:
+    pattern: ^CC-[A-Z]+$
+    error_message: "Cost center must be CC-XXXX format"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: Confluence
+
+product:
+  description: >
+    The product tag will indicate the product to which the associated resource belongs to. The product tag will be mandatory, and it will be applied via Policy upon the creation of resources groups, so that the tag and its value are appended automatically to the resources created inside the account. Required to provide a global view of all resources dedicated to an application.
+  is_required: true
+  scope:
+    global:
+  default_value:
+  - format: # https://www.terraform.io/language/functions/format
+    - "%s %s"
+    - "${var.mandatory_tags.cost_center}"
+    - "${var.mandatory_tags.artifact_name}"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: _TBD_
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: N/A
+
+description:
+  description: >
+    This tag will allow the resource operator to provide additional context information describing the resource and its purpose. The tag will be mandatory, and will be required by policy for all resources, but its content will be left to the choice of the staff member deploying the resource.
+  is_required: true
+  scope:
+    global:
+  default_value:
+  - format: # https://www.terraform.io/language/functions/format
+    - "${var.mandatory_tags.product}"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: WL
+    maintainer: DevOps/Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: N/A
+
+CIA:
+  description: >
+    This mandatory tag allows a proper data classification to be attached to the resource. It will be built as a three-letter code. See https://confluence.alm.europe.cloudcenter.corp/display/SCFCCOE/Tags
+  is_required: true
+  scope:
+    global:
+  validation:
+    pattern: ^[ABC][ABC][ABC]$ # length(regexall("^[ABC][ABC][ABC]$", var.mandatory_tags["CIA"])) == 1
+    error_message: "`CIA` tag must have a valid value. See https://confluence.alm.europe.cloudcenter.corp/display/SCFCCOE/Tags"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    - Plataforma - Patch
+    value_source: Confluence
+
+apm_functional:
+  description: >
+    This tag will allow to match resources against Application Portofolio Management (APM) systems. Currently, it corresponds to the field "functional application code" in Orbis tool. The tag will be mandatory and contains the functional application code of the application supported by the account.
+  is_required: true
+  scope:
+    global:
+  # validation:
+  #   pattern: ^([0-9]+|NOT_IDENTIFIED)$
+  #   error_message: "This tag must be only numeric or be set to NOT_IDENTIFIED"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: Orbis
+
+shared_cost:
+  description: This tag indicates whether the resources support different applications and, thus, their costs should be shared.
+  is_required: true
+  scope:
+    global:
+  validation:
+    pattern: ^(?:yes|no)$ # yes / no
+    error_message: "`shared_cost` tag must have a valid value (`yes` | `no`)."
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: ¿?
+
+entity:
+  description: This tag helps in governance and cost allocation purposes. It allows to generate multicloud reports by Entity
+  is_required: true
+  scope:
+    global:
+  validation:
+    pattern: ^(?:CWE|CGS|CMS|CES|CGE|CON|CFR|CPT|CBE|CNL|CIT|CAT|CPL|CUK|CHQ|SAS|SCG|HCB|CBX)$
+    error_message: "Entity tag must have one of this values CWE|CGS|CMS|CES|CGE|CON|CFR|CPT|CBE|CNL|CIT|CAT|CPL|CUK|CHQ|SAS|SCG|HCB"
+  default_value:
+  - format:
+    - "%s"
+    - ${var.entity_upper}
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: Confluence
+
+environment:
+  description: Identifies the environment.
+  is_required: true
+  scope:
+    global:
+  default_value:
+  - condition: # Associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-003OtherResourcesnamingstandard
+      string_equals:
+        ${var.environment}:
+        - ^d[0-9]$
+    format:
+    - "%s"
+    - DEV
+  - condition: # Associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-003OtherResourcesnamingstandard
+      string_equals:
+        ${var.environment}:
+        - ^i[0-9]$
+    format:
+    - "%s"
+    - PRE
+  - condition: # Associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-003OtherResourcesnamingstandard
+      string_equals:
+        ${var.environment}:
+        - ^p[0-9]$
+    format:
+    - "%s"
+    - PRO
+  - condition: # Associated resources. See: https://confluence.alm.europe.cloudcenter.corp/display/ARCHCLOUD/Naming+and+Tagging+Building+Block#NamingandTaggingBuildingBlock-CV-003OtherResourcesnamingstandard
+      string_equals:
+        ${var.environment}:
+        - ^s[0-9]$
+    format:
+    - "%s"
+    - SBX
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: Confluence
+
+apm_technical:
+  description: >
+    This tag will allow to match resources against Application Portofolio Management (APM) systems. Currently, it corresponds to the field "technical application code" in Orbis tool. The tag shall contain the technical application code of the application supported by the resource.
+  is_required: true
+  # validation:
+  # pattern: ^([0-9]+|NOT_IDENTIFIED)$
+  # error_message: "This tag must be only numeric or be set to NOT_IDENTIFIED"
+  scope:
+    global:
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: Orbis
+
+business_service:
+  description: CMDB Business Service code. Enables application traceability, ownership, classification, compliance, etc. Per resource.
+  is_required: true
+  scope:
+    global:
+  # validation:
+  #   pattern: ^([0-9]+|NOT_IDENTIFIED)$
+  #   error_message: "This tag must be only numeric or be set to NOT_IDENTIFIED"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: CMDB
+
+service_component:
+  description: CMDB Service Component code. Enables application traceability, ownership, classification, compliance, etc. Per resource.
+  is_required: true
+  scope:
+    global:
+  # validation:
+  #   pattern: ^([0-9]+|NOT_IDENTIFIED)$
+  #   error_message: "This tag must be only numeric or be set to NOT_IDENTIFIED"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    value_source: CMDB
+
+AutoStartStopSchedule:
+  description: 'Allows to automate start and stop hours during the week (first seven fields) and startup order. Eight fields separated by ";". Ex: 08/22,08/22,08/22,08/22,08/22,-,-;0'
+  is_required: false
+  scope:
+    global:
+  validation:
+    pattern: ^(?:[^;]+;){8}$ # Eight fields separated by ";"
+    error_message: '`AutoStartStopSchedule` tag value format should be Eight fields separated by ";"'
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: ¿?
+
+management_level:
+  description: >
+    Corresponds to the deployment model of the cloud service. Possible values are IaaS, CaaS, PaaS and SaaS. It help generate KPIs that allow, for instance, to track the adoption of PaaS services over IaaS.
+  is_required: false
+  scope:
+    global:
+  validation:
+    pattern: ^(?:IaaS|CaaS|PaaS|SaaS)$ # Eight fields separated by ";"
+    error_message: "`management_level` tag must have a valid value (`IaaS` | `CaaS` | `PaaS` | `SaaS`)."
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: N/A
+
+channel:
+  description: >
+    This tag will indicate the distribution channel to which the associated resource belongs to. The channel tag will not be mandatory and will be applied individually to specific resources as applicable. Required for financial reporting.
+  is_required: false
+  scope:
+    global:
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    value_source: ¿?
+
+tracking_code:
+  description: >
+    This tag is not mandatory. The tracking code tag will allow for Azure/AWS resources to be matched against internal inventory systems such as Atlas. The tag will be mandatory, and will be required by policy for all resources. It is not mandatory for those resources belonging to a development environment. Its value will be provided by the staff member deploying the resource during deployment.
+  is_required: true
+  scope:
+    global:
+  default_value:
+  - format: # https://www.terraform.io/language/functions/format
+    - "${var.mandatory_tags.channel}"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Corporativo
+    - Plataforma - Monitorizacion
+    - Plataforma - Patch
+    value_source: Confluence
+
+os_platform:
+  description: >
+    Tag complementaria para poder definir el naming por defecto en instancias de máquina virtual según su sistema operativo.
+  is_required: true
+  scope:
+    ${var.artifact_acronym}:
+    - ec2
+  validation:
+    pattern: ^(?i:Linux|Solaris|VendorOS|Windows)$
+    error_message: "`os_platform` tag must have a valid value (`Linux` | `Solaris` | `VendorOS` | `Windows`)."
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Arquitectura
+    maintainer: Plataforma
+    stakeholders:
+    - Automation
+    value_source: Confluence
+
+patch_highavailability:
+  description: >
+    Propuesta de Plataforma para uso de Configuración de contingencia Alcance: Sólo VMs Redhat y Windows Flujos de asignación de tag (a cerrar con Jesus) - Infra propia de Plataforma - Infra de proyecto definida por arquitectura (cerrar el flujo con ellos)
+  is_required: true
+  scope:
+    ${var.artifact_acronym}:
+    - ec2
+  validation:
+    pattern: ^(?:yes|no)$ # yes / no
+    error_message: "`patch_highavailability` tag must have a valid value (`yes` | `no`)."
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source:
+
+patch_AZ:
+  description: >
+    AvailabilityZone Zona de despliegue/disponibilidad en la cloud
+  is_required: true
+  scope:
+    ${var.artifact_acronym}:
+    - ec2
+  validation:
+    pattern: ^[abc123]$ # AWS: a, b, c // Azure: 1, 2, 3
+    error_message: "`patch_AZ` tag must have a valid value (AWS: a, b, c // Azure: 1, 2, 3)."
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source:
+
+patch_enable:
+  description: >
+    Identifica si la máquina tiene que seguir el flujo de parcheado o no - Yes: Entra en el ciclo default de parcheo - No: La máquina seguirá un ciclo diferenciado de parcheo. Se gestiona fuera del flujo "default"
+  is_required: true
+  scope:
+    ${var.artifact_acronym}:
+    - ec2
+  validation:
+    pattern: ^(?:yes|no|exception)$
+    error_message: "`patch_enable` tag must have a valid value (`yes` | `no` | `exception`)."
+  default_value:
+  - format:
+    - "yes"
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source:
+
+patch_order:
+  description: >
+    Para definir el orden de parcheado de las máquinas Requiere un estudio detallado de las tipologías de funciones de la CMDB Escenarios de asignación de tag (a cerrar con Jesus) - Infra propia de Plataforma - Infra de proyecto definida por arquitectura (cerrar el flujo con ellos)
+  is_required: true
+  scope:
+    ${var.artifact_acronym}:
+    - ec2
+  validation:
+    pattern: ^[12345]$
+    error_message: "`patch_order` tag must have a valid value (`1` | `2` | `3` | `4` | `5`)."
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source:
+
+backup_needed:
+  description: >
+    Propuesta del equipo de Soporte/Backup para identificar aquellos elementos que por su naturaleza, no se les debe hacer backup. Por ejemplo los S3 mismo que dispobiliza el servicio de backup.
+  is_required: false
+  scope:
+    ${var.artifact_acronym}:
+    - as3
+  validation:
+    pattern: ^(?:yes|no)$
+    error_message: "`backup_needed` tag must have a valid value (`yes` | `no`)."
+  default_value:
+  - format:
+    - "yes"
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source: No existe en CMDB
+
+backup_platform:
+  description: Determina si la plataforma de backup utilizada es la propia del Cloud o un servicio de terceros (Ej, CommVault)
+  is_required: false
+  scope:
+    ${var.mandatory_tags.backup_needed}:
+    - "yes" # Este tag no será necesario en el caso de que el tag "backup_needed" se establezca en "No"
+    ${var.artifact_acronym}:
+    - as3 # Este tag aplica si el artefacto es Amazon S3.
+    - eks # Este tag aplica si el artefacto es Amazon Elastic Kubenetes Service.
+  validation:
+    pattern: ^(?:Native|CommVault)$
+    error_message: "`backup_platform` tag must have a valid value (`Native` | `CommVault`)."
+  default_value:
+  - format:
+    - Native
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source:
+
+backup_reporting_supported:
+  description: >
+    Propuesta del equipo de Soporte/Backup para identificar aquellos bucket S3 que serán destino de los ficheros de reporte sobre jobs de backup.
+  is_required: false
+  scope:
+    ${var.artifact_acronym}:
+    - as3
+  validation:
+    pattern: ^(?:yes|no)$
+    error_message: "`backup_reporting_supported` tag must have a valid value (`yes` | `no`)."
+  default_value:
+  - format:
+    - "no"
+  tag_management: # Optional
+    is_corporative: false
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source: N/A
+
+regions:
+  description: >
+    Region definida donde se despliegua el recurso.
+  is_required: true
+  validation:
+    pattern: ^[a-z]{3}$
+    error_message: "regions tag must have only 3 characters."
+  default_value:
+  - format:
+    - ${local.geo_region}
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source: N/A
+
+map-migrated:
+  description: >
+    Codigo de descuento para los despliegues en las cuentas de AWS.
+  is_required: true
+  default_value:
+  - format:
+    - "mig6NKH48JLY6"
+  tag_management: # Optional
+    is_corporative: true
+    defined_by: Plataforma
+    maintainer: Plataforma
+    stakeholders:
+    - Plataforma - Patch
+    value_source: N/A
