@@ -1,0 +1,268 @@
+---
+Metadata:
+  Description: Despliegue de recursos requeridos por el Control de AMI en la Cuenta Central.
+
+#TODO
+Parameters:
+  OUOrigen:    
+    Type: "String"
+    Description: "OU Origen de Eventos EC2"
+    Default: "o-3f2ugigyr0"
+  LambdaBucket:
+    Type: "String"
+    Description: "S3 Bucket With Lambda Function"
+    Default: "mkx-cencosud-cfdn-prd"
+  LambdaFile:
+    Type: "String"
+    Description: "Lambda Function File on S3 Bucket"
+    Default: "ControlAMI/ControlAMI.zip"
+  DDBReglas:    
+    Type: "String"
+    Description: "Tabla de DynamoDB para Reglas del Control AMI"
+    Default: "cct-plataforma-ddb-control-ami"
+  RolEC2:    
+    Type: "String"
+    Description: "Nombre de Rol de Administracion EC2"
+    Default: "cct-plataforma-control-ami-lambda-role"
+  RolLambda:    
+    Type: "String"
+    Description: "Nombre de Rol de Lambda"
+    Default: "cct-plataforma-control-ami-rol"
+
+Resources:
+  LambdaIAMRole:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::Role"
+    DeletionPolicy: "Delete"
+    Properties:
+      Path: "/"
+       #TODO: Verificar
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      - "arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB"
+      MaxSessionDuration: 3600
+      RoleName: !Ref RolLambda
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action: "sts:AssumeRole"
+          Effect: "Allow"
+          Principal:
+            Service:
+            - "lambda.amazonaws.com"
+
+  LambdaIAMRoleManagedPolicy:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::IAM::ManagedPolicy"
+    DeletionPolicy: "Delete"
+    Properties:
+      ManagedPolicyName: "cct-plataforma-lambda-iam-role-policy"
+      Path: "/"
+      Description: ""
+      Groups: []
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Resource: !Sub "arn:aws:iam::*:role/${RolEC2}"
+          Action: "sts:AssumeRole"
+          Effect: "Allow"
+        - Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBReglas}"
+          Action:
+          - "dynamodb:DeleteItem"
+          - "dynamodb:GetItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          Effect: "Allow"
+        - Resource: !Sub "arn:aws:logs:${AWS::Region}::*"
+          Action: "logs:CreateLogGroup"
+          Effect: "Allow"
+        - Resource:
+          - !Sub "arn:aws:logs:${AWS::Region}::log-group:/aws/lambda/cct-plataforma-control-ami:*"
+          Action:
+          - "logs:CreateLogStream"
+          - "logs:PutLogEvents"
+          Effect: "Allow"
+        - Resource: "*"
+          Action:
+            - "ec2:StopInstances"
+            - "ec2:TerminateInstances"
+            - "ec2:DescribeImages"
+            - "ec2:DescribeInstances"
+            - "ec2:CreateTags"
+            - "ec2:DescribeTags"
+            - "ec2:DescribeImageAttribute"
+            - "ec2:CreateNetworkInterface"
+            - "ec2:DescribeNetworkInterfaces"
+            - "ec2:DeleteNetworkInterface"
+          Effect: "Allow"
+        - Resource: "*"
+          Action:
+            - "iam:GetInstanceProfile"
+          Effect: "Allow"
+      Roles:
+      - Ref: "LambdaIAMRole"
+      Users: []
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CustomEventRuleControlAMI.Arn
+
+  PermissionForDefaultEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: events.amazonaws.com
+                  
+  LambdaFunction:
+    UpdateReplacePolicy: "Retain"
+    Type: AWS::Lambda::Function
+    DeletionPolicy: "Delete"
+    Properties:
+      Handler: "lambda_function.lambda_handler"
+      Role: !GetAtt LambdaIAMRole.Arn      
+      Code:
+        S3Bucket: 
+            Ref: "LambdaBucket"
+        S3Key:
+            Ref: "LambdaFile"
+      MemorySize: 256
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      Timeout: 300
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      FileSystemConfigs: []
+      FunctionName: "cct-plataforma-control-ami"
+      Runtime: "python3.13"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/cct-plataforma-control-ami"
+      EphemeralStorage:
+        Size: 512
+      Architectures:
+      - "x86_64"
+      Environment:           
+        Variables: 
+            DYNAMODB_TABLE: 
+                Ref: "DDBReglas"
+            ROL_EC2:    
+                Ref: "RolEC2"
+      Tags:
+        - Key: Name
+          Value: 'cct-plataforma-lambda-create-account'
+        - Key: owner
+          Value: 'cct-plataforma'
+
+  DynamoDBTableReglas:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: "Delete"
+    Properties:
+      SSESpecification:
+        SSEEnabled: false
+      TableName: !Ref DDBReglas
+      AttributeDefinitions:
+      - AttributeType: "S"
+        AttributeName: "allow_type"
+      - AttributeType: "S"
+        AttributeName: "allow_value"        
+      ContributorInsightsSpecification:
+        Enabled: false
+      BillingMode: "PROVISIONED"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+      KeySchema:
+      - KeyType: "HASH"
+        AttributeName: "allow_type"
+      - KeyType: "RANGE"
+        AttributeName: "allow_value"        
+      DeletionProtectionEnabled: false
+      TableClass: "STANDARD"
+      Tags: []
+      TimeToLiveSpecification:
+        Enabled: false
+
+  CustomEventBus:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::Events::EventBus"
+    DeletionPolicy: "Delete"
+    Properties:
+      Tags: []
+      Name: "cct-plataforma-global-eb-control-ami"
+
+  EventBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: AllowPutEventsFromOrganization
+      EventBusName: !Ref CustomEventBus
+      Statement:
+        Sid: AllowPutEventsFromOrganization
+        Effect: Allow
+        Principal: '*'
+        Action: events:PutEvents
+        Condition:
+          StringEquals:
+            aws:PrincipalOrgID: !Ref OUOrigen
+        Resource:
+          Fn::GetAtt:
+            - CustomEventBus
+            - Arn
+    DependsOn:
+      - CustomEventBus      
+
+  CustomEventRuleControlAMI:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::Events::Rule"
+    DeletionPolicy: "Delete"
+    Properties:
+      EventBusName: !Ref CustomEventBus
+      EventPattern:
+        detail-type:
+        - "AWS API Call via CloudTrail"
+        source:
+        - "aws.ec2"
+        detail:
+          eventSource:
+            - "ec2.amazonaws.com"
+          eventName:
+          - "RunInstances"
+      Targets:
+      - Id: "CentralLambdaFunctionAMIFromCustom"
+        Arn: !GetAtt LambdaFunction.Arn
+      Id: "cct-plataforma-custom-er-control-ami"
+      State: "DISABLED"
+      Name: "cct-plataforma-custom-er-control-ami"
+    DependsOn:
+      - CustomEventBus      
+
+  DefaultEventRuleControlAMI:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::Events::Rule"
+    DeletionPolicy: "Delete"
+    Properties:
+      EventPattern:
+        detail:
+          eventSource:
+            - "ec2.amazonaws.com"
+          eventName:
+          - "RunInstances"
+      Targets:
+      - Id: "CentralLambdaFunctionAMIFromDefault"
+        Arn: !GetAtt LambdaFunction.Arn
+      Id: "cct-plataforma-default-er-control-ami"
+      State: "DISABLED"
+      Name: "cct-plataforma-default-er-control-ami"
+    DependsOn:
+          - LambdaFunction          

@@ -1,0 +1,118 @@
+---
+Metadata:
+  Description: Despliegue de recursos requeridos por el Control de AMI en cuentas con recursos EC2.
+
+Parameters:
+  CuentaCentral:
+    Type: "String"
+    Description: "Cuenta Central Control AMI"
+    Default: "754151944497"
+
+  RolLambda:    
+    Type: "String"
+    Description: "Nombre de Rol de Lambda"
+    Default: "cct-plataforma-control-ami-rol"
+
+  TargetEventBus:
+    Type: String
+    Description: Nombre del EventBus en Cuenta Central para Control de AMI.
+    Default: "cct-plataforma-global-eb-control-ami"
+
+Resources:
+  EventBridgeCrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cct-plataforma-control-ami-eb-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - events.amazonaws.com
+
+  ControlAMICrossAccountEBIAMPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: cct-plataforma-control-ami-eb-iam-policy
+      Roles:
+        - !Ref EventBridgeCrossAccountRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: events:PutEvents
+            Resource: !Sub "arn:aws:events:${AWS::Region}:${CuentaCentral}:event-bus/${TargetEventBus}"
+
+  ControlAMIEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: cct-plataforma-control-ami-event-rule
+      Description: Redirects RunInstances events to Global EventBus on central account.
+      EventPattern:
+        source:
+          - "aws.ec2"
+        detail-type:
+          - "AWS API Call via CloudTrail"
+        detail:
+          eventSource:
+            - "ec2.amazonaws.com"
+          eventName:
+            - "RunInstances"
+      State: DISABLED
+      Targets:
+        - Arn: !Sub "arn:aws:events:${AWS::Region}:${CuentaCentral}:event-bus/${TargetEventBus}"
+          Id: CrossAccountToCentralEventBus
+          RoleArn: !GetAtt EventBridgeCrossAccountRole.Arn
+
+  LambdaCrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cct-plataforma-control-ami-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${CuentaCentral}:role/${RolLambda}"
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+
+  ControlAMICrossAccountLambdaIAMPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: cct-plataforma-control-ami-lambda-iam-policy
+      Roles:
+        - !Ref LambdaCrossAccountRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: "*"
+          - Effect: Allow
+            Action: 
+              - ec2:StopInstances
+              - ec2:TerminateInstances
+              - ec2:DescribeImages
+              - ec2:DescribeInstances
+              - ec2:CreateTags
+              - ec2:DescribeTags
+              - ec2:DescribeImageAttribute
+              - ec2:CreateNetworkInterface
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DeleteNetworkInterface
+            Resource: "*"
+          - Effect: Allow
+            Action: 
+              - iam:GetInstanceProfile
+            Resource: "*"

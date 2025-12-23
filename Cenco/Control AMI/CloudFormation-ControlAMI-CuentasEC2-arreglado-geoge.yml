@@ -1,0 +1,137 @@
+---
+Metadata:
+  Description: Despliegue de recursos requeridos por el Control de AMI en cuentas con recursos EC2.
+Parameters:
+  CuentaCentral:
+    Type: "String"
+    Description: "Cuenta Central Control AMI"
+    Default: "306591703355"
+  RoleSTSLambda:    
+    Type: "String"
+    Description: "Nombre de Role que la Lambda asumira"
+    Default: "cct-plataforma-ami-control-role-v2"
+  TargetEventBus:
+    Type: String
+    Description: Nombre del EventBus en Cuenta Central para Control de AMI.
+    Default: "cct-plataforma-ami-control-event-bus-v2"
+  CentralRegion:
+    Type: String
+    Description: Region donde esta el EventBus central
+    Default: "us-east-1"
+
+Conditions:
+  IsUsEast1: !Equals [!Ref "AWS::Region", "us-east-1"]
+
+Resources:
+  EventBridgeCrossAccountRole:
+    Type: AWS::IAM::Role
+    Condition: IsUsEast1
+    Properties:
+      RoleName: cct-plataforma-control-ami-eb-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - events.amazonaws.com
+
+  ControlAMICrossAccountEBIAMPolicy:
+    Type: AWS::IAM::Policy
+    Condition: IsUsEast1
+    Properties:
+      PolicyName: cct-plataforma-control-ami-eb-iam-policy
+      Roles:
+        - !Ref EventBridgeCrossAccountRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: events:PutEvents
+            Resource: !Sub "arn:aws:events:${CentralRegion}:${CuentaCentral}:event-bus/${TargetEventBus}"
+
+  LambdaCrossAccountRole:
+    Type: AWS::IAM::Role
+    Condition: IsUsEast1
+    Properties:
+      RoleName: cct-plataforma-control-ami-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${CuentaCentral}:root"
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+
+  ControlAMICrossAccountLambdaIAMPolicy:
+    Type: AWS::IAM::Policy
+    Condition: IsUsEast1
+    Properties:
+      PolicyName: cct-plataforma-control-ami-lambda-iam-policy
+      Roles:
+        - !Ref LambdaCrossAccountRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: "*"
+          - Effect: Allow
+            Action: 
+              - ec2:StopInstances
+              - ec2:TerminateInstances
+              - ec2:DescribeImages
+              - ec2:DescribeInstances
+              - ec2:CreateTags
+              - ec2:DescribeTags
+              - ec2:DescribeImageAttribute
+              - ec2:CreateNetworkInterface
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DeleteNetworkInterface
+            Resource: "*"
+          - Effect: Allow
+            Action: 
+              - iam:GetInstanceProfile
+            Resource: "*"
+
+  ControlAMIEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: cct-plataforma-control-ami-event-rule
+      Description: Redirects RunInstances events to Global EventBus on central account.
+      EventPattern:
+        source:
+          - "aws.ec2"
+        detail-type:
+          - "AWS API Call via CloudTrail"
+        detail:
+          eventSource:
+            - "ec2.amazonaws.com"
+          eventName:
+            - "RunInstances"
+      State: ENABLED
+      Targets:
+        - Arn: !Sub "arn:aws:events:${CentralRegion}:${CuentaCentral}:event-bus/${TargetEventBus}"
+          Id: CrossAccountToCentralEventBus
+          RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/cct-plataforma-control-ami-eb-role"
+
+Outputs:
+  EventRuleArn:
+    Description: ARN de la regla EventBridge
+    Value: !GetAtt ControlAMIEventRule.Arn
+  Region:
+    Description: Region de despliegue
+    Value: !Ref "AWS::Region"
+  IAMRolesCreated:
+    Description: Indica si los roles IAM fueron creados en esta region
+    Value: !If [IsUsEast1, "Si - Roles creados", "No - Solo EventRule"]
