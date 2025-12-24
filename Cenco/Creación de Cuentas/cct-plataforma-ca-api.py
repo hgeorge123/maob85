@@ -258,6 +258,10 @@ def post_account(data_json):
             root_email = ("aws.root." + country  + "+" + ("-".join(filter(None, [account_type, business_unit, environment])))).lower() + "@cencosud.com"                        
             account_name = "Cencosud " + (" ".join(filter(None, [country, account_type, business_unit, environment]))).upper()
 
+        case "SHS":
+            root_email = ("aws.root." + country  + "+corp-" + ("-".join(filter(None, [account_type, environment])))).lower() + "@cencosud.com"                        
+            account_name = "Cencosud Corp " + (" ".join(filter(None, [account_type, country, environment]))).upper()
+
         case _: 
             #root_email = "aws.root.{}+{}-{}-{}@cencosud.com".format(country, business_unit, product, environment).lower()
             #account_name = "Cencosud {} {} {} {}".format(country.upper(), business_unit.upper(), product.upper(), environment.upper())

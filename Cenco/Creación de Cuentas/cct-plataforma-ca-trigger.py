@@ -3,6 +3,7 @@ import boto3
 import logging
 import urllib3
 import os
+from typing import Any, Dict, Optional
 
 #SCHEDULER
 import uuid
@@ -30,6 +31,9 @@ security_team_ddb_arn = os.environ.get('DDBSecurityTableARN')
 #API
 API_MASTERS_URL = os.environ.get("API_MASTERS_URL")
 API_MASTERS_SECRET_NAME = os.environ.get("API_MASTERS_SECRET_NAME")
+
+#CCT RESOURCE GOBERNANCE API
+RESOURCE_GOBERNANCE_API_URL = os.environ.get("RESOURCE_GOBERNANCE_API_URL", "https://cct-api-resource-gobernance.cencosud.com/api/v1/scopes")
 
 #SCHEDULER
 WAIT_TIME = int(os.environ.get("WAIT_TIME", "60"))
@@ -222,7 +226,17 @@ def get_ou(account_type, country, environment, business_unit):
                     return cenco_ou
             else:
                 return None
-
+            
+        case "SHS":
+            if (cenco_ou):
+                shs_ou = get_target_ou(cenco_ou, "SHAREDSRV")
+                if(shs_ou):
+                    return shs_ou
+                else:
+                    return cenco_ou
+            else:
+                return None
+            
         case _:
             return None    
 
@@ -675,6 +689,11 @@ def update_security_team_db(data):
                 msg = "{} Item appended to Security Team DyanamoDB Table".format(msg)    
                 if (DEBUG):            
                     logger.info('Item created on secutiry team dynamodb table: {}'.format(item_data))
+                try:
+                    update_resource_gobernance_api(data)
+                except Exception as e:
+                    if (DEBUG):       
+                        logger.info('ERROR updating Resource Gobernance API: {}'.format(str(e)))
             else:
                 msg = "{} Warning: Cannot append item to Security Team DyanamoDB Table".format(msg)    
         except Exception as e:
@@ -689,6 +708,105 @@ def update_security_team_db(data):
 
     update_ticket(id, status, msg)
     return response
+
+def build_contact(name: Any, account: Any, email: Any) -> Optional[Dict[str, Any]]:
+    name = (name or "").strip()
+    account = (str(account) if account is not None else "").strip()
+    email = (email or "").strip()
+    if not (name or account or email):
+        return None
+    return {
+        "name": name or None,
+        "account": account or None,
+        "email": email or None,
+    }
+
+def norm_env(s: Optional[str]) -> Optional[str]:
+    if s is None:
+        return None
+    m = s.strip().lower()
+    mapping = {
+        "prd": "prod", "production": "prod", "prod": "prod",
+        "dev": "dev", "development": "dev",
+        "qa": "qa", "test": "test", "tst": "test",
+        "stg": "staging", "stage": "staging", "staging": "staging",
+        "pre": "preprod", "preprod": "preprod",
+    }
+    return mapping.get(m, m)
+
+def update_resource_gobernance_api(data):
+    provider = "aws"
+
+    alias = data.get("alias",{}).get("S","")
+
+    environment = data.get("environment",{}).get("S","")
+    environment = norm_env(environment)
+
+    name = data.get("account_name",{}).get("S","")
+
+    scope_identifier = data.get("account_number",{}).get("S","")
+    if scope_identifier is not None:
+        scope_identifier = str(scope_identifier)
+
+    businessUnit = data.get("business_unit",{}).get("S","")
+
+    pulsar = True if businessUnit in ["PUL","PULSAR"] else False
+    security_check = False
+    workspaces = False
+
+    # Contactos
+    owner = build_contact(
+        data.get("owner_name",{}).get("S",""),
+        data.get("owner_account",{}).get("S",""),
+        data.get("owner",{}).get("S","")
+    )
+    responsibleTechnical = build_contact(
+        data.get("owner_name",{}).get("S",""),
+        data.get("owner_account",{}).get("S",""),
+        data.get("owner",{}).get("S","")
+    )
+    responsibleFunctional = build_contact(
+        data.get("owner_name",{}).get("S",""),
+        data.get("owner_account",{}).get("S",""),
+        data.get("owner",{}).get("S","")
+    )
+
+    # provider_metadata = todo lo no mapeado
+    provider_metadata = {}
+    provider_metadata["country"] = data.get("country",{}).get("S","")
+    provider_metadata["product"] = data.get("product",{}).get("S","")
+    provider_metadata["account_type"] = data.get("account_type",{}).get("S","")
+
+    body = {
+        "provider": provider,
+        "alias": alias,
+        "environment": environment,
+        "name": name,
+        "scope_identifier": scope_identifier,
+        "businessUnit": businessUnit,
+        "pulsar": pulsar,
+        "security_check": security_check,
+        "workspaces": workspaces,
+        "provider_metadata": provider_metadata or {},
+    }
+    if owner: body["owner"] = owner
+    if responsibleTechnical: body["responsibleTechnical"] = responsibleTechnical
+    if responsibleFunctional: body["responsibleFunctional"] = responsibleFunctional
+
+    headers = {"Content-Type": "application/json"}
+    try:
+        response = http.request(
+            "POST",
+            RESOURCE_GOBERNANCE_API_URL,
+            body=json.dumps(body),
+            headers=headers,
+            timeout=urllib3.Timeout(connect=30, read=30),
+        )
+        return response
+    except Exception as e:
+        if DEBUG:
+            logger.info(f"Error making POST request: {str(e)}")
+        return None
 
 #Main Lambda Function
 def lambda_handler(event, context):

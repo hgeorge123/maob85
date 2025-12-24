@@ -7,42 +7,73 @@
       "DATA": {
         "S": "DATA"
       },
-      "DL": {
-        "S": "DEFAULT"
+      "DATA_BU": {
+        "S": "DATA (B.U.)"
       },
       "DF": {
         "S": "DIGITAL FACTORY"
       },
+      "DL": {
+        "S": "DEFAULT"
+      },
       "PUL": {
         "S": "PULSAR"
+      },
+      "SHS": {
+        "S": "SHARED SERVICES"
       }
     }
+  },
+  "additional_allowed_users": {
+    "L": [
+      {
+        "S": "george.hernandezescorche@externos-ar.cencosud.com"
+      }
+    ]
   },
   "business_units": {
     "M": {
       "ADV": {
-        "S": "ADV"
+        "S": "Advance Analytics"
+      },
+      "BACKUP": {
+        "S": "BACKUP"
       },
       "BOF": {
-        "S": "BOF"
+        "S": "Backoffice"
+      },
+      "BU": {
+        "S": "Business Unit"
+      },
+      "CCOM": {
+        "S": "Cencommerce"
+      },
+      "COEAI": {
+        "S": "COEAI"
       },
       "CP": {
-        "S": "CP"
+        "S": "Cenco Pay"
       },
       "HI": {
-        "S": "HI"
+        "S": "Home Improvement"
       },
       "RRHH": {
         "S": "RRHH"
+      },
+      "SANDBOX-HUB": {
+        "S": "SANDBOX-HUB"
       },
       "SAPSM": {
         "S": "SAPSM"
       },
       "SM": {
-        "S": "SM"
+        "S": "Supermercados"
+      },
+      "TEC": {
+        "S": "Tecnologia"
       },
       "TXD": {
-        "S": "TXD"
+        "S": "Tiendas por Departamento"
       }
     }
   },
@@ -81,15 +112,18 @@
       },
       "PE": {
         "S": "Peru"
+      },
+      "USA": {
+        "S": "Estados Unidos"
       }
     }
   },
   "environments": {
     "M": {
-      "PROD": {
+      "Prod": {
         "S": "PRODUCTION"
       },
-      "TEST": {
+      "Test": {
         "S": "TEST"
       }
     }
@@ -97,51 +131,402 @@
   "finops_approvers": {
     "L": [
       {
-        "S": "a@a.com"
+        "S": "george.hernandezescorche@externos-ar.cencosud.com"
+      },
+      {
+        "S": "patricio.pino@externos-cl.cencosud.com"
+      },
+      {
+        "S": "eduardo.bascunanp@cencosud.cl"
+      },
+      {
+        "S": "guillermo.cabrera@cencosud.cl"
       }
     ]
   },
   "groups_and_permissions": {
     "M": {
-      "DEFAULT": {
+      "DATA": {
         "M": {
-          "844844f8-10c1-702f-334e-b0f99990a6f5": {
+          "64981498-a061-7070-6c12-9fa2d9107769": {
             "L": [
               {
-                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-8a05e3dbcef70d14"
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
               }
             ]
           },
-          "a4f89468-00b1-7089-2590-2fdcb1df14e9": {
+          "90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5": {
             "L": [
               {
-                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-8a05e3dbcef70d14"
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183"
+              }
+            ]
+          },
+          "90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9"
               },
               {
-                "S": "arn:aws:sso:::permissionSet/ssoins-72235a26f6943cd8/ps-c54b3d63ffd6f5dc"
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c"
+              }
+            ]
+          },
+          "90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6"
+              }
+            ]
+          },
+          "90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          },
+          "c408d488-7021-7086-8e2b-73227f6260b3": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817"
+              }
+            ]
+          },
+          "f4d874b8-9031-70c9-441c-1a4b322bedc7": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
               }
             ]
           }
         }
-      }
+      },
+      "DF": {
+        "M": {
+          "64981498-a061-7070-6c12-9fa2d9107769": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183"
+              }
+            ]
+          },
+          "90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c"
+              }
+            ]
+          },
+          "90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6"
+              }
+            ]
+          },
+          "90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          },
+          "c408d488-7021-7086-8e2b-73227f6260b3": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817"
+              }
+            ]
+          },
+          "f4d874b8-9031-70c9-441c-1a4b322bedc7": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          }
+        }
+      },
+      "DL": {
+        "M": {
+          "64981498-a061-7070-6c12-9fa2d9107769": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183"
+              }
+            ]
+          },
+          "90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c"
+              }
+            ]
+          },
+          "90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6"
+              }
+            ]
+          },
+          "90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          },
+          "c408d488-7021-7086-8e2b-73227f6260b3": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817"
+              }
+            ]
+          },
+          "f4d874b8-9031-70c9-441c-1a4b322bedc7": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          }
+        }
+      },
+      "PUL": {
+        "M": {
+          "64981498-a061-7070-6c12-9fa2d9107769": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183"
+              }
+            ]
+          },
+          "90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c"
+              }
+            ]
+          },
+          "90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6"
+              }
+            ]
+          },
+          "90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          },
+          "c408d488-7021-7086-8e2b-73227f6260b3": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817"
+              }
+            ]
+          },
+          "f4d874b8-9031-70c9-441c-1a4b322bedc7": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          }
+        }
+      },
+      "SHS": {
+        "M": {
+          "64981498-a061-7070-6c12-9fa2d9107769": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-4149564e-6caf-4e50-83ac-35c6a92c04f5": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-28bdf9d90919d183"
+              }
+            ]
+          },
+          "90675d22db-5486063c-fa0a-4d89-9215-1e00b8307440": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-4b05e32182d116b9"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-0384d1d6b89c42fa"
+              }
+            ]
+          },
+          "90675d22db-7a2ab445-68e8-4a1f-83a8-ebf6027115f2": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-af4750f3f972f52c"
+              }
+            ]
+          },
+          "90675d22db-f9779017-2e96-44da-bdb4-5c59ef6818fd": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-8c5c203293b932a6"
+              }
+            ]
+          },
+          "90675d22db-fac9ea17-24e7-4eee-96f8-7302c9b27161": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-fc943fa410077094"
+              },
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          },
+          "c408d488-7021-7086-8e2b-73227f6260b3": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-cfc8198652321817"
+              }
+            ]
+          },
+          "f4d874b8-9031-70c9-441c-1a4b322bedc7": {
+            "L": [
+              {
+                "S": "arn:aws:sso:::permissionSet/ssoins-7223cca07917bd4c/ps-716b33658eeba7bd"
+              }
+            ]
+          }
+        }
+      }	  
     }
   },
   "platform_approvers": {
     "L": [
       {
-        "S": "a@a.com"
+        "S": "george.hernandezescorche@externos-ar.cencosud.com"
+      },
+      {
+        "S": "patricio.pino@externos-cl.cencosud.com"
+      },
+      {
+        "S": "guillermo.cabrera@cencosud.cl"
+      },
+      {
+        "S": "eduardo.bascunanp@cencosud.cl"
       }
     ]
   },
   "stacksets": {
     "M": {
-      "DEFAULT": {
+      "DATA": {
+        "L": []
+      },
+      "DF": {
+        "L": []
+      },
+      "DL": {
+        "L": []
+      },
+      "PUL": {
         "L": [
           {
-            "S": "secret-ejemplo"
+            "S": "pulsar-roles"
+          },
+          {
+            "S": "pulsar-oidc"
+          },
+          {
+            "S": "pulsar-github-policies"
+          },
+          {
+            "S": "pulsar-bootstrap-policies"
+          },
+          {
+            "S": "pulsar-access-policies"
           }
         ]
-      }
+      },
+      "SHS": {
+        "L": []
+      }	  
     }
   }
 }
