@@ -268,7 +268,10 @@ def post_account(data_json):
             root_email = ("aws.root." + country  + "+" + ("-".join(filter(None, [business_unit, product, environment])))).lower() + "@cencosud.com"
             account_name = "Cencosud " + (" ".join(filter(None, [country, business_unit, product, environment]))).upper()
 
-    alias = "cenco-" + ("-".join(filter(None, [business_unit,product,account_type,country,environment]))).lower()
+    if account_type == "SHS":
+        alias = "cenco-" + ("-".join(filter(None, [account_type,country,environment]))).lower()
+    else:
+        alias = "cenco-" + ("-".join(filter(None, [business_unit,product,account_type,country,environment]))).lower()
 
     sso_name = "admin"
     sso_lastname = "user"
@@ -633,4 +636,5 @@ def lambda_handler(event, context):
             logger.info('ERROR: {}'.format(str(e)))
         response = 'Error: ' + str(e)
         
+
     return response
